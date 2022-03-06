@@ -1,0 +1,15 @@
+# ignore everything
+*
+
+# don't ginore these
+!.gitignore
+!*.ts
+!*tsconfig.json
+!*.sass
+!*.html
+
+# apply to sub directories
+!*/
+
+# but always ignore these
+.idea
