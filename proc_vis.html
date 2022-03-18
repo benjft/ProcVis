@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Processor Visualiser</title>
+    <link rel="stylesheet" href="proc_vis.css">
+  </head>
+  <body>
+    <div class="box">
+      <svg id="cpu-svg" xmlns="http://www.w3.org/2000/svg" width="870px" height="695px">
+        <g transform="translate(10,10)">
+
+          <g transform="translate(175,150)">
+            <path id="data-line7" class="line data"
+                  d="m 0 -14 h 61 v -61 v 150 v -89 h 125 v -61 v 150 v -89 h 289 h -164 v 325 h 89 h -276.5 v -61 v 61 h -123.5"/>
+            <path id="data-line6" class="line data"
+                  d="m 0 -10 h 65 v -65 v 150 v -85 h 125 v -65 v 150 v -85 h 285 h -160 v 325 h 85 h -272.5 v -65 v 65 h -127.5"/>
+            <path id="data-line5" class="line data"
+                  d="m 0 -6  h 69 v -69 v 150 v -81 h 125 v -69 v 150 v -81 h 281 h -156 v 325 h 81 h -268.5 v -69 v 69 h -131.5"/>
+            <path id="data-line4" class="line data"
+                  d="m 0 -2  h 73 v -73 v 150 v -77 h 125 v -73 v 150 v -77 h 277 h -152 v 325 h 77 h -264.5 v -73 v 73 h -135.5"/>
+            <path id="data-line3" class="line data"
+                  d="m 0  2  h 77 v -77 v 150 v -73 h 125 v -77 v 150 v -73 h 273 h -148 v 325 h 73 h -260.5 v -77 v 77 h -139.5"/>
+            <path id="data-line2" class="line data"
+                  d="m 0  6  h 81 v -81 v 150 v -69 h 125 v -81 v 150 v -69 h 269 h -144 v 325 h 69 h -256.5 v -81 v 81 h -143.5"/>
+            <path id="data-line1" class="line data"
+                  d="m 0  10 h 85 v -85 v 150 v -65 h 125 v -85 v 150 v -65 h 265 h -140 v 325 h 65 h -252.5 v -85 v 85 h -147.5"/>
+            <path id="data-line0" class="line data"
+                  d="m 0  14 h 89 v -89 v 150 v -61 h 125 v -89 v 150 v -61 h 261 h -136 v 325 h 61 h -248.5 v -89 v 89 h -151.5"/>
+          </g>
+          <!--        Decoder -->
+          <g transform="translate(0,0)">
+            <g transform="translate(100,125)">
+              <polyline id="ins-ctrl-s" class="line control" points="0,0 25,0"/>
+            </g>
+            <g transform="translate(100,150)">
+              <polyline id="ins-line7" class="line data" points="0,-14 25,-14"/>
+              <polyline id="ins-line6" class="line data" points="0,-10 25,-10"/>
+              <polyline id="ins-line5" class="line data" points="0,-6 25,-6"/>
+              <polyline id="ins-line4" class="line data" points="0,-2 25,-2"/>
+              <polyline id="ins-line3" class="line data" points="0,2 25,2"/>
+              <polyline id="ins-line2" class="line data" points="0,6 25,6"/>
+              <polyline id="ins-line1" class="line data" points="0,10 25,10"/>
+              <polyline id="ins-line0" class="line data" points="0,14 25,14"/>
+              <g transform="translate(25,-50)">
+                <rect id="svg-reg-ins" class="register" height="100px" width="50px"/>
+                <text class="label small" y="22.5" x="2" rotate="90">S</text>
+                <text id="ins-value" class="label" x="50" y="-25" transform="rotate(90)" text-anchor="middle"
+                      alignment-baseline="central">00000000
+                </text>
+                <text class="label small" x="50" y="-40" text-anchor="middle" transform="rotate(90)">Instruction Register</text>
+              </g>
+            </g>
+
+            <g transform="translate(100,450)">
+              <polyline id="pc-ctrl-s" class="line control" points="0,-4 25,-4"/>
+              <polyline id="pc-ctrl-e" class="line control" points="0,0 25,0"/>
+              <polyline id="pc-ctrl-i" class="line control" points="0,4 25,4"/>
+              <g transform="translate(25,-25)">
+                <rect id="svg-reg-pc" class="register" height="100px" width="50px"/>
+                <text class="label small" x="2" y="17" rotate="90">S</text>
+                <text class="label small" x="2" y="23" rotate="90">E</text>
+                <text class="label small" x="2" y="29" rotate="90">I</text>
+                <text id="pc-value" class="label" x="50" y="-25" transform="rotate(90)" text-anchor="middle"
+                      alignment-baseline="central">00000000
+                </text>
+                <text class="label small" x="50" y="-40" text-anchor="middle" transform="rotate(90)">Program Counter</text>
+
+              </g>
+            </g>
+
+            <g transform="translate(100,350)">
+              <path id="alu-ctrl-2" class="line control" d="m 0 -12 h 200"/>
+              <path id="alu-ctrl-1" class="line control" d="m 0 -8 h 200"/>
+              <path id="alu-ctrl-0" class="line control" d="m 0 -4 h 200"/>
+
+              <path id="flgs-3" class="line data" d="m 0 4 h 200"/>
+              <path id="flgs-2" class="line data" d="m 0 8 h 200"/>
+              <path id="flgs-1" class="line data" d="m 0 12 h 200"/>
+              <path id="flgs-0" class="line data" d="m 0 16 h 200"/>
+            </g>
+
+            <g transform="translate(100,212.5)">
+              <path id="t1-ctrl-s" class="line control" d="m 0 2 h 125 v 10.5"/>
+              <path id="t2-ctrl-s" class="line control" d="m 0 -2 h 250 v 14.5"/>
+            </g>
+
+            <g transform="translate(100,87.5)">
+              <path id="a-ctrl-s" class="line control" d="m 0 -6 h 123 v -6.5"/>
+              <path id="a-ctrl-e" class="line control" d="m 0 -2 h 127 v -10.5"/>
+            </g>
+
+            <g transform="translate(100,87.5)">
+              <path id="b-ctrl-s" class="line control" d="m 0 2 h 248 v -14.5"/>
+              <path id="b-ctrl-e" class="line control" d="m 0 6 h 252 v -18.5"/>
+            </g>
+
+            <g transform="translate(100,550)">
+              <path id="addr-ctrl-s" class="line control" d="m 0 -6 h 425 v -44 h 50"/>
+            </g>
+            <g transform="translate(100,550)">
+              <path id="ram-ctrl-s" class="line control" d="m 0 -2 h 550"/>
+              <path id="ram-ctrl-e" class="line control" d="m 0 2 h 550"/>
+            </g>
+            <rect id="svg-decoder" class="decoder" height="575px" width="100px"/>
+
+            <g transform="translate(55,287.5) rotate(-90)">
+              <text class="label large" text-anchor="middle">Control Unit</text>
+            </g>
+          </g>
+
+          <g transform="translate(200,25)">
+            <rect id="svg-reg-a" class="register" height="50px" width="100px"/>
+            <text class="label small" x="19" y="48">S</text>
+            <text class="label small" x="25" y="48">E</text>
+            <text id="a-value" class="label" x="50" y="25" text-anchor="middle" alignment-baseline="central">00000000
+            </text>
+            <text class="label small" x="50" y="10" text-anchor="middle" transform="">General Register A</text>
+          </g>
+          <!--        <rect id="svg-reg-a" class="register" height="50px" width="100px" x="200px" y="25px"/>-->
+
+          <g transform="translate(325,25)">
+            <rect id="svg-reg-b" class="register" height="50px" width="100px"/>
+            <text class="label small" x="19" y="48">S</text>
+            <text class="label small" x="25" y="48">E</text>
+            <text id="b-value" class="label" x="50" y="25" text-anchor="middle" alignment-baseline="central">00000000
+            </text>
+            <text class="label small" x="50" y="10" text-anchor="middle" transform="">General Register B</text>
+          </g>
+          <!--        <rect id="svg-reg-b" class="register" height="50px" width="100px" x="325px" y="25px"/>-->
+
+
+          <!--        ALU-->
+          <g transform="translate(200,200)">
+            <g transform="translate(50,75)">
+              <path id="t1-line7" class="line data" d="m -14 0 v 25"/>
+              <path id="t1-line6" class="line data" d="m -10 0 v 25"/>
+              <path id="t1-line5" class="line data" d="m  -6 0 v 25"/>
+              <path id="t1-line4" class="line data" d="m  -2 0 v 25"/>
+              <path id="t1-line3" class="line data" d="m   2 0 v 25"/>
+              <path id="t1-line2" class="line data" d="m   6 0 v 25"/>
+              <path id="t1-line1" class="line data" d="m  10 0 v 25"/>
+              <path id="t1-line0" class="line data" d="m  14 0 v 25"/>
+            </g>
+            <g transform="translate(175,75)">
+              <path id="t2-line7" class="line data" d="m -14 0 v 25"/>
+              <path id="t2-line6" class="line data" d="m -10 0 v 25"/>
+              <path id="t2-line5" class="line data" d="m  -6 0 v 25"/>
+              <path id="t2-line4" class="line data" d="m  -2 0 v 25"/>
+              <path id="t2-line3" class="line data" d="m   2 0 v 25"/>
+              <path id="t2-line2" class="line data" d="m   6 0 v 25"/>
+              <path id="t2-line1" class="line data" d="m  10 0 v 25"/>
+              <path id="t2-line0" class="line data" d="m  14 0 v 25"/>
+            </g>
+
+            <g transform="translate(0,25)">
+              <rect id="svg-reg-t1" class="register" height="50px" width="100px"/>
+              <text class="label small" x="22" y="9">S</text>
+              <text id="t1-value" class="label" x="50" y="25" text-anchor="middle" alignment-baseline="central">
+                00000000
+              </text>
+              <text class="label small" x="50" y="40" text-anchor="middle" transform="">Math Register T1</text>
+            </g>
+            <!--          <rect id="svg-reg-t1" class="register" height="50px" width="100px" x="0" y="25px"/>-->
+            <g transform="translate(125,25)">
+              <rect id="svg-reg-t2" class="register" height="50px" width="100px"/>
+              <text class="label small" x="22" y="9">S</text>
+              <text id="t2-value" class="label" x="50" y="25" text-anchor="middle" alignment-baseline="central">
+                00000000
+              </text>
+              <text class="label small" x="50" y="40" text-anchor="middle" transform="">Math Register T2</text>
+            </g>
+            <!--          <rect id="svg-reg-t2" class="register" height="50px" width="100px" x="125" y="25px"/>-->
+            <g transform="translate(0, 100)">
+              <path id="svg-alu" class="alu" d="M 50 0
+              h 45.8578643763
+              a 10 10 0 0 1 7.071067811865 2.928932188112
+              L 112.5 12.5
+              l 9.571067811865 -9.571067811865
+              A 10 10 0 0 1 129.1421356237 0
+              H 206.9575235849
+              A 10 10 0 0 1 215.4375066249 15.2999894
+              L 165.4375066249 95.2999894
+              A 10 10 0 0 1 156.9575235849 100
+              H 68.04247642507
+              A 10 10 0 0 1 59.562493375 95.2999894
+              L 9.5624933751 15.2999894
+              A 10 10 0 0 1 18.0424764151 0 z"/>
+
+              <text class="label large" text-anchor="middle" x="112.5" y="55">ALU</text>
+            </g>
+          </g>
+
+          <g transform="translate(575,0)">
+            <g transform="translate(50,475)">
+              <path id="addr-line7" class="line address" d="m 0 -14 h 25"/>
+              <path id="addr-line6" class="line address" d="m 0 -10 h 25"/>
+              <path id="addr-line5" class="line address" d="m 0 -6 h 25"/>
+              <path id="addr-line4" class="line address" d="m 0 -2 h 25"/>
+              <path id="addr-line3" class="line address" d="m 0 2 h 25"/>
+              <path id="addr-line2" class="line address" d="m 0 6 h 25"/>
+              <path id="addr-line1" class="line address" d="m 0 10 h 25"/>
+              <path id="addr-line0" class="line address" d="m 0 14 h 25"/>
+            </g>
+
+            <g transform="translate(0,425)">
+              <rect id="svg-reg-addr" class="register" height="100px" width="50px"/>
+              <text class="label small" x="2" y="72" rotate="90">S</text>
+              <text id="addr-value" class="label" x="50" y="-25" transform="rotate(90)" text-anchor="middle"
+                    alignment-baseline="central">00000000
+              </text>
+              <text class="label small" x="50" y="-40" text-anchor="middle" transform="rotate(90)">Address Register</text>
+            </g>
+            <!--          <rect id="svg-reg-adr" class="register" height="100px" width="50px" y="425px"/>-->
+            <rect id="svg-ram" class="ram" height="575px" width="200px" x="75px"/>
+            <line class="ram" x1="75px" x2="275px" y1="45px" y2="45px"/>
+            <g transform="translate(77,544)">
+              <text class="label small" y="0" rotate="90">S</text>
+              <text class="label small" y="6" rotate="90">E</text>
+            </g>
+            <text class="label large" x="175px" y="35px" text-anchor="middle">RAM</text>
+          </g>
+          <g transform="translate(100,352)">
+            <text class="label small" rotate="-90" text-anchor="middle" y="-12">0</text>
+            <text class="label small" rotate="-90" text-anchor="middle" y="-8">1</text>
+            <text class="label small" rotate="-90" text-anchor="middle" y="-4">2</text>
+
+            <text class="label small" rotate="-90" text-anchor="middle" y="4">Z</text>
+            <text class="label small" rotate="-90" text-anchor="middle" y="8">S</text>
+            <text class="label small" rotate="-90" text-anchor="middle" y="12">O</text>
+            <text class="label small" rotate="-90" text-anchor="middle" y="16">C</text>
+          </g>
+          <g transform="translate(0,575)"> <!-- Clock -->
+            <path id="clock-line" d="m 50 0 v 25" class="line data"/>
+            <rect y="25" height="75" width="350" class="decoder"/>
+            <text x="20" y="62.5" class="label large" alignment-baseline="central">Clock</text>
+            <g id="clock-loop" class="button" onclick="onButtonPress('loop')" transform="translate(125,37.5)">
+              <circle class="clock-button" r="25" cx="25" cy="25"/>
+              <polygon class="register" points="30 25, 15 33.6602540378, 15 16.3397459622"/>
+              <polygon class="register" points="40 25, 25 33.6602540378, 25 16.3397459622"/>
+            </g>
+            <g id="clock-instruction" class="button" onclick="onButtonPress('instruction')" transform="translate(200,37.5)">
+              <circle class="clock-button" r="25" cx="25" cy="25"/>
+              <polygon class="register" points="35 25, 20 33.6602540378, 20 16.3397459622"/>
+            </g>
+            <g id="clock-step" class="button" onclick="onButtonPress('step')" transform="translate(275,37.5) ">
+              <circle class="clock-button" r="25" cx="25" cy="25"/>
+              <polygon class="register" points="30 25, 15 33.6602540378, 15 16.3397459622"/>
+              <polygon class="register" points="30 16.3397459622, 35 16.3397459622, 35 33.6602540378, 30 33.6602540378"/>
+            </g>
+          </g>
+        </g>
+      </svg>
+      <div class="ram input">
+        <table id="ram-table"></table>
+      </div>
+      <script src="./proc_sim.js"></script>
+      <script src="./sim_ui.js"></script>
+    </div>
+    <div class="instructions">
+      The shown "computer" uses an eight bit architecture, with the following instructions:<br>
+      <ul>
+        <li>
+          Maths:
+          <ul>
+            <li>add $1 $2 $r -> $r = $1 + $2</li>
+            <li>sub $1 $2 $r -> $r = $1 - $2</li>
+            <li>and $1 $2 $r -> $r = $1 & $2</li>
+            <li>ior $1 $2 $r -> $r = $1 | $2</li>
+            <li>xor $1 $2 $r -> $r = $1 ^ $2</li>
+            <li>not $1 $r -> $r = ~$1</li>
+          </ul>
+        </li>
+        <li>
+          Memory:
+          <ul>
+            <li>save $r $x -> saves the value in $r at $x</li>
+            <li>load $1 $r -> loads the value in/at $1 into $r</li>
+          </ul>
+        </li>
+        <li>
+          Jumps:
+          <ul>
+            <li>jmp $x -> goto $x</li>
+            <li>jlz $x -> goto $x if the last maths operation gave a signed value less than 0</li>
+            <li>jgz $x -> goto $x if the last maths operation gave a signed value greater than 0</li>
+            <li>jez $x -> goto $x is the last maths operation gave a value of zero</li>
+          </ul>
+        </li>
+      </ul>
+
+      Operands labeled $1 or $2 can reference either an immediate value
+      or a register (either a or b). Only one operand can be immediate per
+      instruction.<br><br>
+
+      Operands labeled $r must refer to a register (either a or b)<br><br>
+
+      Operands labeled $x refer to a memory address (in hex)
+    </div>
+  </body>
+</html>

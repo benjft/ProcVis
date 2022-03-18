@@ -1,0 +1,134 @@
+body
+  padding: 0
+  margin: 0
+  display: flex
+  justify-content: space-around
+  max-width: 100vw
+  flex-wrap: wrap
+
+.box
+  display: flex
+  width: max-content
+  position: relative
+  overflow-x: auto
+
+svg
+  overflow: visible
+
+.instructions
+  flex: 1
+  background-color: grey
+  min-width: 33%
+
+.button
+  &:hover>.clock-button
+    fill-opacity: 75%
+
+  &:active>.clock-button
+    fill-opacity: 100%
+
+  &.active>.clock-button
+    fill: seagreen
+
+.clock-button
+  fill: white
+  fill-opacity: 50%
+  stroke: darkred
+  stroke-width: 3
+
+  //&:hover
+    fill-opacity: 75%
+
+  //&:active
+    fill-opacity: 100%
+
+.decoder, .register, .alu, .ram
+  stroke-width: 3px
+  rx: 15px
+
+.label
+  font-family: sans-serif
+
+  &.large
+    font-size: xx-large
+
+  &.small
+    font-size: xx-small
+
+.decoder
+  fill: indianred
+  stroke: darkred
+
+.register
+  fill: seagreen
+  stroke: darkgreen
+
+.alu
+  fill: cornflowerblue
+  stroke: darkblue
+
+.scroll-box
+  height: 100%
+
+.ram
+  fill: lightgoldenrodyellow
+  stroke: darkorange
+
+  &.input
+    position: absolute
+    //display: flex
+    // positioning over same element in SVG
+    top: 57px
+    left: 670px
+    width: 188px
+    //height: 513px
+    max-height: 513px
+    overflow-y: auto
+
+
+.inputLabel
+  font-size: 16pt
+  font-family: monospace
+
+.inputArea
+  background-color: transparent
+  font-family: monospace
+  font-size: 16pt
+  &:invalid
+    background-color: indianred
+
+#ram-table
+  border-spacing: 0
+  align-self: center
+
+.ram-word
+  background-color: transparent
+  &.active
+    background-color: seagreen
+
+td
+  padding: 5pt
+
+
+.line
+  fill: none
+  stroke-width: 3px
+
+  &.control
+    stroke: #500
+    &.high
+      stroke: #f00
+
+  &.data
+    stroke: #005
+    &.high
+      stroke: #00f
+
+  &.address
+    stroke: #050
+    &.high
+      stroke: #0f0
+
+  &.background
+    //stroke: white
+    stroke-width: 4px
