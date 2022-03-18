@@ -290,13 +290,20 @@
         </li>
       </ul>
 
+      To write a program type the instructions in RAM.
+      Once entered they will be instantly compiled to machine code and ready to execute.<br><br>
+
       Operands labeled $1 or $2 can reference either an immediate value
       or a register (either a or b). Only one operand can be immediate per
       instruction.<br><br>
 
       Operands labeled $r must refer to a register (either a or b)<br><br>
 
-      Operands labeled $x refer to a memory address (in hex)
+      Operands labeled $x refer to a memory address given as an immediate hex value
+      or the values in registers a or b.<br><br>
+
+      Note that instructions with an immediate value take two bytes of memory, one byte for the instruction and the next
+      byte for the immediate value.
     </div>
 <!--  </body>-->
 <!--</html>-->
