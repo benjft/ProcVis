@@ -86,50 +86,51 @@ class Simulation {
         ]
     }
 
+    public reset() {
+        this.busses.forEach(b => b.reset())
+        this.decoder.reset()
+    }
+
+    public cycleDisplay(idx: number) {
+        this.ram.data[idx].cycleDisplayMode()
+        this.update_display()
+    }
     private initializeRamDisplay() {
         let ramTBL = document.getElementById("ram-table")
-        let ramHTML = (i: number, v: number) => `
+        let ramHTML = (i: number, v: string) => `
 <tr class="ram-word">
-  <td class="inputLabel">${i.toString(16).padStart(2, '0')}</td>
-  <td><input id="ram-input${i}" class="inputArea" size="8" pattern="[01]{${WORD_SIZE}}" inputmode="numeric" value="${v.toString(2).padStart(WORD_SIZE, '0')}"></td>
+  <td class="inputLabel" onclick="sim.cycleDisplay(${i})">${i.toString(16).padStart(2, '0')}</td>
+  <td><input id="ram-input${i}" class="inputArea" size="8" pattern="[01]{${WORD_SIZE}}" inputmode="numeric" value="${v}"></td>
 </tr>`
         let innerHTML = ''
         this.ram.data.forEach((value, index) => {
-            let rowHTML = ramHTML(index, value)
+            let rowHTML = ramHTML(index, value.getDisplayValue())
             innerHTML += rowHTML
         })
         ramTBL.innerHTML += innerHTML
 
         let inputs = Array.from(document.getElementsByClassName("inputArea"))
-        inputs.forEach((elem, index) => {
+        inputs.forEach(elem => {
             elem.addEventListener("change", (e) => {
                 let target = e.target as HTMLInputElement
                 let idx = parseInt(target.id.replace("ram-input", ""))
-                if (!target.value.match("[01]{8}")) {
-                    let ins = assemble_ins(target.value)
-                    if (ins == null || (ins.length > 1 && idx > (1<<WORD_SIZE)-1-ins.length)) {
-                        target.value = this.ram.data[idx].toString(2).padStart(WORD_SIZE, '0')
-                    } else {
-                        while (ins.length > 0) {
-                            let textBox = document.getElementById(`ram-input${idx}`) as HTMLInputElement
-                            let value = ins.shift()
-                            textBox.value = value.toString(2).padStart(WORD_SIZE, '0')
-                            this.ram.data[idx] = value
-                            idx++
-                        }
-                    }
+                let ins = assembleInstruction(target.value)
+                if (typeof ins == "string" || (ins.length > 1 && idx > (1 << WORD_SIZE)-1-ins.length)) {
+                    target.value = this.ram.data[idx].getDisplayValue()
                 } else {
-                    let value = parseInt(target.value, 2)
-                    if (value > (1<<WORD_SIZE)) {
-                        value &= (1<<WORD_SIZE) - 1
-                        target.value = value.toString(2).padStart(WORD_SIZE, '0')
+                    while (ins.length > 0) {
+                        let textBox = document.getElementById(`ram-input${idx}`) as HTMLInputElement
+                        let value = ins.shift()
+                        textBox.value = value.getDisplayValue()
+                        this.ram.data[idx] = value
+                        idx++
                     }
-                    // alert(`row ${idx} edited!`)
-                    this.ram.data[idx] = value
                 }
             })
         })
     }
+
+
 
     private cleanBusses = () => this.busses.forEach(b => b.clean())
     public update_state() {
@@ -190,7 +191,7 @@ class Simulation {
             let inputBox = document.getElementById(`ram-input${index}`) as HTMLInputElement
             inputBox.parentElement.parentElement.classList.remove("active")
             if (inputBox !== document.activeElement) {
-                inputBox.value = value.toString(2).padStart(WORD_SIZE, '0')
+                inputBox.value = value.getDisplayValue()
             }
         })
         this.setRamScroll()
@@ -214,7 +215,7 @@ class Simulation {
         }
         this.update()
         while (this.decoder.currentStep() != "fetch_step1" && !this._stop) {
-            await sleep(500)
+            await sleep(250)
             this.update()
         }
         if (this._state == "instruction") {
@@ -234,6 +235,18 @@ class Simulation {
             await this.update_loop()
         }
         this._state = null
+    }
+
+    public loadProgram(program: string) {
+        let programLines = program.split('\n')
+        let words = programLines.map(assembleInstruction).flat()
+        // this.ram.data = Array.from(this.ram.data, (_, k) => k < words.length ? words[k] : new RamWord())
+
+        this.reset()
+        this.ram.data.forEach((_, i) => {
+            this.ram.data[i] = i < words.length ? words[i] : new RamWord()
+        })
+        sim.update_display()
     }
 }
 
@@ -266,3 +279,31 @@ async function onButtonPress(button: clockState) {
     }
     buttonGroup.classList.remove("active")
 }
+
+const example_1 =
+`jmp i
+0x04
+3
+0
+load i b
+5
+sub b i b
+1
+jlz i
+0x08
+load i a
+0x05
+save b a
+load i a
+0x02
+load a a
+load i b
+0x03
+load b b
+add a b b
+load i a
+0x03
+save b a
+jmp i
+0x04`
+sim.loadProgram(example_1)

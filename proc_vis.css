@@ -126,19 +126,19 @@ td {
   stroke: #500;
 }
 .line.control.high {
-  stroke: #f00;
+  stroke: #5aa;
 }
 .line.data {
   stroke: #005;
 }
 .line.data.high {
-  stroke: #00f;
+  stroke: #aa5;
 }
 .line.address {
   stroke: #050;
 }
 .line.address.high {
-  stroke: #0f0;
+  stroke: #a5a;
 }
 .line.background {
   stroke-width: 4px;

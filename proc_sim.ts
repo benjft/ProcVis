@@ -25,6 +25,10 @@ abstract class ReadOnlyBus {
     public getValue(): number {
         return this.value
     }
+
+    public reset() {
+        this.value = 0
+    }
 }
 
 class Bus extends ReadOnlyBus {
@@ -188,19 +192,86 @@ const RAM_INSTRUCTIONS = {
     "save": RAM_WRITE
 }
 
+class RamWord {
+    private numValue: number
+    private textValue: string|null
+    public displayMode: number = 0
+
+    constructor(initialValue: number = 0, initialText: string|null = null) {
+        this.numValue = initialValue
+        this.textValue = initialText
+        if (this.textValue != null || this.numValue == 0) {
+            this.displayMode = 3
+        }
+    }
+
+    public readonly getValue = () => this.numValue
+
+    public getTextValue() {
+        if (this.textValue != null) {
+            return this.textValue
+        }
+        if (this.numValue == 0) {
+            return "NO OP"
+        }
+        return null
+    }
+
+    public getSignedValue() {
+        let value = this.numValue & ((1 << (WORD_SIZE-1)) - 1)
+        let sign = (this.numValue & (1 << (WORD_SIZE-1))) != 0
+        if (sign) {
+            value += 1
+        }
+        let str: string = sign ? '-' : ''
+        str += value.toString(10)
+
+        return str
+    }
+
+    public getHexValue() {
+        let value = this.numValue & ((1 << WORD_SIZE) - 1)
+        return `0x${value.toString(16).padStart(Math.ceil(WORD_SIZE/4), '0')}`
+    }
+
+    public getBinaryValue() {
+        let value = this.numValue & ((1 << WORD_SIZE) - 1)
+        return `0b${value.toString(2).padStart(WORD_SIZE, '0')}`
+    }
+
+    public getDisplayValue() {
+        switch (this.displayMode) {
+            case 0: return this.getSignedValue()
+            case 1: return this.getHexValue()
+            case 2: return this.getBinaryValue()
+            case 3: return this.getTextValue()
+        }
+    }
+
+    public cycleDisplayMode() {
+        this.displayMode += 1
+        this.displayMode %= this.textValue == null && this.numValue != 0 ? 3 : 4
+    }
+
+    public setValue(numValue: number, textValue: string|null = null) {
+        this.textValue = textValue
+        this.numValue = numValue
+    }
+}
+
 class RAM {
     private controlBus: ReadOnlyBus
     private addressBus: ReadOnlyBus
 
     private dataBus: Bus
 
-    public readonly data: number[]
+    public readonly data: RamWord[]
 
     public constructor(wordSize: number, controlBus: ReadOnlyBus, addressBus: ReadOnlyBus, dataBus: Bus) {
         this.controlBus = controlBus
         this.addressBus = addressBus
         this.dataBus = dataBus
-        this.data = Array.from({length: (1<<wordSize)}, () => 0)
+        this.data = Array.from({length: (1<<wordSize)}, () => new RamWord())
     }
 
     public update() {
@@ -208,12 +279,12 @@ class RAM {
         let value: number
         switch (this.controlBus.getValue()) {
             case CTRL_ENB:
-                value = this.data[address]
+                value = this.data[address].getValue()
                 this.dataBus.setValue(value)
                 break
             case CTRL_SET:
                 value = this.dataBus.getValue()
-                this.data[address] = value
+                this.data[address].setValue(value)
                 break
             default: // No control or invalid control state
                 break
@@ -258,6 +329,9 @@ class Decoder {
     private currentInstruction: funcFunc = this.fetch_step1
     public readonly currentStep = () =>this.currentInstruction.name
 
+    public reset() {
+        this.currentInstruction = this.fetch_step1
+    }
 
     private fetch_step1(): funcFunc {
         this.programControl.setValue(CTRL_ENB)
@@ -675,80 +749,114 @@ function assemble_alu_ins(ins: string): number[] | null {
     return instruction
 }
 
-function assemble_jmp_ins(ins: string): number[] | null {
-    let pattern = `(${Object.keys(JMP_INSTRUCTIONS).join('|')}) ([\\da-f]{2}|a|b)`
-    let match = ins.toLowerCase().match(pattern)
-    if (match == null) {
+const patternAluInstruction = `^(${Object.keys(ALU_INSTRUCTIONS).filter(v => v != 'not').join('|')}) ([abi]) ([abi]) ([ab])|(not) ([abi]) ([ab])$`
+function assembleAluInstruction(instruction: string): RamWord | null {
+    let match = instruction.match(patternAluInstruction)
+    if (!match) {
         return null
     }
 
-    match = match.slice(1).filter(v => v != null)
+    match = match.filter(v => v && v.length > 0).slice(1)
+    let immediate = match[1] == 'i' || match[2] == 'i'
 
-    let ins_name = match[0]
+    let prefix = immediate ? INS_ALU_I : INS_ALU_R
+    let infix = ALU_INSTRUCTIONS[match[0]]
+    let t1 = match[1] == 'b' || match[2] == 'i' ? 1 : 0
+    let t2: number = 0
+    let d: number
+    if (match[0] == 'not') {
+        d = match[2] == 'b' ? 1 : 0
+    } else {
+        t2 = match[2] == 'b' || (immediate && match[1] == 'b') ? 1 : 0
+        d = match[3] == 'b' ? 1 : 0
+    }
+    let instructionValue = (prefix << 6) | (infix << 3) | (t1 << 2) | (t2 << 1) | d
 
-    let instruction: number[] = [1]
+    return new RamWord(instructionValue, instruction)
+}
 
+const patternJmpInstruction = `^(${Object.keys(JMP_INSTRUCTIONS).join('|')}) ([abi])$`
+function assembleJmpInstruction(instruction: string): RamWord | null {
+    let match: string[] = instruction.match(patternJmpInstruction)
+    if (!match) {
+        return null
+    }
+
+    match = match.filter(v => v && v.length > 0).slice(1)
     let prefix = INS_JMP
-    let infix = JMP_INSTRUCTIONS[ins_name]
-    let t1 = 0
-    let t2 = 0
+    let infix = JMP_INSTRUCTIONS[match[0]]
+    let i = match[1] == 'i' ? 1 : 0
+    let s = match[1] == 'b' ? 1 : 0
     let d = 0
 
-    let op = match[1]
-    if (op.match("[\\da-f]{2}")) {
-        instruction[1] = parseInt(op, 16)
-        t1 = 1
-    } else if (op == 'b') {
-        t2 = 1
-    }
-
-    instruction[0] = (prefix << 6) | (infix << 3) | (t1 << 2) | (t2 << 1) | d
-    return instruction
+    let instructionValue = (prefix << 6) | (infix << 3) | (i << 2) | (s << 1) | d
+    return new RamWord(instructionValue, instruction)
 }
 
-function assemble_ram_ins(ins: string): number[] | null {
-    let pattern = `(${Object.keys(RAM_INSTRUCTIONS).join('|')}) (-?[\\da-f]{1,3}|a|b) (a|b)`
-    let match = ins.toLowerCase().match(pattern)
-    if (match == null) {
+const patternRamInstruction = /^(save) ([ab]) ([ab])|(load) ([abi]) ([ab])$/
+function assembleRamInstruction(instruction: string): RamWord | null {
+    let match: string[] = instruction.match(patternRamInstruction)
+    if (!match) {
         return null
     }
 
-    match = match.slice(1).filter(v => v != null)
-
-    let ins_name = match[0]
-
-    let instruction: number[] = [0]
-
+    match = match.filter(v => v && v.length > 0).slice(1)
     let prefix = INS_RAM
-    let infix = RAM_INSTRUCTIONS[ins_name]
-    let t1 = 0
-    let t2 = match[1] == 'b' ? 1:0
-    let d = match[2] == 'b' ? 1 : 0
+    let infix = RAM_INSTRUCTIONS[match[0]]
+    let i = match[1] == 'i' ? 1 : 0
+    let s = match[0] == 'save' ? (match[2] == 'b' ? 1 : 0) : (match[1] == 'b' ? 1 : 0)
+    let d = match[0] == 'save' ? (match[1] == 'b' ? 1 : 0) : (match[2] == 'b' ? 1 : 0)
 
-    let op = match[1]
-    if (op.match("-?\\d{1,3}") && ins_name == "load") {
-        instruction[1] = parseInt(op, 10) & ((1 << WORD_SIZE) - 1)
-        t1 = 1
-    } else if (op.match("[\\da-f]{1,2}") && ins_name == "save") {
-        instruction[1] = parseInt(op, 16) & ((1 << WORD_SIZE) - 1)
-    } else if (op != 'a' && op != 'b') {
-        return null
-    }
-
-    instruction[0] = (prefix << 6) | (infix << 3) | (t1 << 2) | (t2 << 1) | d
-    return instruction
+    let instructionValue = (prefix << 6) | (infix << 3) | (i << 2) | (s << 1) | d
+    return new RamWord(instructionValue, instruction)
 }
 
-function assemble_ins(ins: string): number[] | null {
-    let instruction = assemble_alu_ins(ins)
-    if (instruction != null) {
-        return instruction
+const patternDecNumber = `-?\\d{1,3}`
+const patternHexNumber = `0x[\\da-f]{1,2}`
+const patternBinNumber = `0b[01]{1,8}`
+const patternNumber = `\\b(${patternDecNumber}|${patternHexNumber}|${patternBinNumber})\\b`
+function assembleInstruction(instruction: string): RamWord[] {
+    instruction = instruction.toLowerCase()
+    let regExpNumber = new RegExp(patternNumber)
+    let match: string[] = regExpNumber.exec(instruction)
+    let immediateText: string | null = null
+    let immediateNumber: RamWord | null = null
+    if (match) {
+        if (match.length > 2) {
+            console.warn("Too many immediate values detected.")
+        }
+
+        immediateText = match[1]
+        instruction = instruction.replace(immediateText, 'i')
+
+        if (immediateText.match(`^${patternDecNumber}$`)) {
+            immediateNumber = new RamWord(parseInt(immediateText, 10))
+            immediateNumber.displayMode = 0
+        } else if (immediateText.match(`^${patternHexNumber}$`)) {
+            immediateNumber = new RamWord(parseInt(immediateText.replace('0x', ''), 16))
+            immediateNumber.displayMode = 1
+        } else { // if (immediateText.match(`^${patternBinNumber}$`)) {
+            immediateNumber = new RamWord(parseInt(immediateText.replace('0b', ''), 2))
+            immediateNumber.displayMode = 2
+        }
     }
 
-    instruction = assemble_jmp_ins(ins)
-    if (instruction != null) {
-        return instruction
+    let instructionWord: RamWord = assembleAluInstruction(instruction)
+    if (instructionWord == null) {
+        instructionWord = assembleJmpInstruction(instruction)
+        if (instructionWord == null) {
+            instructionWord = assembleRamInstruction(instruction)
+        }
     }
 
-    return assemble_ram_ins(ins)
+    if(instructionWord == null) {
+        if (immediateNumber != null && instruction == 'i') {
+            return [immediateNumber]
+        }
+        console.warn("Unable to compile instruction. Check syntax.")
+    }
+    if (immediateNumber != null) {
+        return [instructionWord, immediateNumber]
+    }
+    return [instructionWord]
 }
