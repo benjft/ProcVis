@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Processor Visualiser</title>
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--  <head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <title>Processor Visualiser</title>-->
+<!--    <link rel="stylesheet" href="proc_vis.css">-->
+<!--  </head>-->
+<!--  <body>-->
     <link rel="stylesheet" href="proc_vis.css">
-  </head>
-  <body>
     <div class="box">
       <svg id="cpu-svg" xmlns="http://www.w3.org/2000/svg" width="870px" height="695px">
         <g transform="translate(10,10)">
@@ -259,43 +260,38 @@
     </div>
     <div class="instructions">
       The shown "computer" uses an eight bit architecture, with the following instructions:<br>
+      Operands to the instruction are in the form $i and $r. $r must be either 'a' or 'b' referring to general use
+      registers a and b. $i can be 'a', 'b' or 'i' indicating to use instead the value immediately following the
+      instruction.
       <ul>
         <li>
           Maths:
           <ul>
-            <li>add $1 $2 $r -> $r = $1 + $2</li>
-            <li>sub $1 $2 $r -> $r = $1 - $2</li>
-            <li>and $1 $2 $r -> $r = $1 & $2</li>
-            <li>ior $1 $2 $r -> $r = $1 | $2</li>
-            <li>xor $1 $2 $r -> $r = $1 ^ $2</li>
-            <li>not $1 $r -> $r = ~$1</li>
+            <li>add $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> + $i<sub>2</sub></li>
+            <li>sub $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> - $i<sub>2</sub></li>
+            <li>and $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise and with $i<sub>2</sub></li>
+            <li>ior $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise inclusive or with $i<sub>2</sub></li>
+            <li>xor $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise exclusive or with $i<sub>2</sub></li>
+            <li>not $i $r &rightarrow; set $r to the bitwise negation of $i</li>
           </ul>
         </li>
         <li>
           Memory:
           <ul>
-            <li>save $r $x -> saves the value in $r at $x</li>
-            <li>load $1 $r -> loads the value in/at $1 into $r</li>
+            <li>save $r<sub>1</sub> $r<sub>2</sub> &rightarrow; saves the value in $r<sub>1</sub> at $r<sub>2</sub></li>
+            <li>load $i $r &rightarrow; loads the value/value at $i into $r</li>
           </ul>
         </li>
         <li>
           Jumps:
           <ul>
-            <li>jmp $x -> goto $x</li>
-            <li>jlz $x -> goto $x if the last maths operation gave a signed value less than 0</li>
-            <li>jgz $x -> goto $x if the last maths operation gave a signed value greater than 0</li>
-            <li>jez $x -> goto $x is the last maths operation gave a value of zero</li>
+            <li>jmp $i &rightarrow; goto $i</li>
+            <li>jlz $i &rightarrow; goto $i if the last maths operation gave a signed value less than 0</li>
+            <li>jgz $i &rightarrow; goto $i if the last maths operation gave a signed value greater than 0</li>
+            <li>jez $i &rightarrow; goto $i is the last maths operation gave a value of zero</li>
           </ul>
         </li>
       </ul>
-
-      Operands labeled $1 or $2 can reference either an immediate value
-      or a register (either a or b). Only one operand can be immediate per
-      instruction.<br><br>
-
-      Operands labeled $r must refer to a register (either a or b)<br><br>
-
-      Operands labeled $x refer to a memory address (in hex)
     </div>
-  </body>
-</html>
+<!--  </body>-->
+<!--</html>-->
