@@ -56,29 +56,15 @@ svg {
   font-size: xx-small;
 }
 
-.decoder {
-  fill: indianred;
-  stroke: darkred;
-}
-
-.register {
-  fill: seagreen;
-  stroke: darkgreen;
-}
-
-.alu {
-  fill: cornflowerblue;
-  stroke: darkblue;
+.register, .alu, .decoder, .ram {
+  fill: lightgoldenrodyellow;
+  stroke: darkorange;
 }
 
 .scroll-box {
   height: 100%;
 }
 
-.ram {
-  fill: lightgoldenrodyellow;
-  stroke: darkorange;
-}
 .ram.input {
   position: absolute;
   top: 57px;
@@ -88,18 +74,24 @@ svg {
   overflow-y: auto;
 }
 
+.ram.read, .register.read, .alu.read {
+  stroke: darkred;
+  fill: indianred;
+}
+.ram.write, .register.write, .alu.write {
+  stroke: darkblue;
+  fill: cornflowerblue;
+}
+
 .inputLabel {
   font-size: 16pt;
   font-family: monospace;
 }
 
 .inputArea {
-  background-color: transparent;
+  background-color: lightgoldenrodyellow;
   font-family: monospace;
   font-size: 16pt;
-}
-.inputArea:invalid {
-  background-color: indianred;
 }
 
 #ram-table {
@@ -123,22 +115,22 @@ td {
   stroke-width: 3px;
 }
 .line.control {
-  stroke: #500;
+  stroke: #a11;
 }
 .line.control.high {
-  stroke: #5aa;
+  stroke: #1aa;
 }
 .line.data {
-  stroke: #005;
+  stroke: #11a;
 }
 .line.data.high {
-  stroke: #aa5;
+  stroke: #aa1;
 }
 .line.address {
-  stroke: #050;
+  stroke: #1a1;
 }
 .line.address.high {
-  stroke: #a5a;
+  stroke: #a1a;
 }
 .line.background {
   stroke-width: 4px;
