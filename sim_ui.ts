@@ -1,4 +1,3 @@
-
 const WORD_SIZE = 8
 
 const CTRL_SIZE_SET = 1
@@ -11,6 +10,7 @@ type SVGinHTML = HTMLElement & SVGElement
 type clockState = "loop" | "instruction" | "step"
 
 class Simulation {
+    public clock_period: number = 250
     private readonly dataBus: Bus
 
     private readonly ctrlIns: Bus
@@ -80,6 +80,13 @@ class Simulation {
             this.ctrlT1, this.ctrlT2, this.ctrlAddress, this.ctrlALU, this.alu)
 
         this.registers = [this.regIns, this.regPC, this.regA, this.regB, this.regT1, this.regT2, this.regAddress]
+
+        this.registers.forEach(r =>{
+            document.getElementById(`g-reg-${r.name}`).onclick = () => {
+                r.cycleDisplayMode()
+                this.update_display()
+            }
+        })
         this.busses = [...this.registers,
             this.ctrlIns, this.ctrlPC, this.ctrlA, this.ctrlB, this.ctrlT1, this.ctrlT2, this.ctrlAddress,
             this.ctrlALU, this.alu, this.ctrlRam, this.dataBus
@@ -95,6 +102,7 @@ class Simulation {
         this.ram.data[idx].cycleDisplayMode()
         this.update_display()
     }
+
     private initializeRamDisplay() {
         let ramTBL = document.getElementById("ram-table")
         let ramHTML = (i: number, v: string) => `
@@ -129,7 +137,6 @@ class Simulation {
             })
         })
     }
-
 
 
     private cleanBusses = () => this.busses.forEach(b => b.clean())
@@ -180,7 +187,7 @@ class Simulation {
             update_bus(`${r.name}-line`, "01234567".split(""), r.getValue())
             update_bus(`${r.name}-ctrl`, "-s -e -i".split(" "), r.controlBus.getValue())
             let textValue = document.getElementById(`${r.name}-value`) as SVGinHTML
-            textValue.textContent = r.getValue().toString(2).padStart(r.size, '0')
+            textValue.textContent = r.getDisplayValue()
 
             let register = document.getElementById(`svg-reg-${r.name}`) as SVGinHTML
             if (r.controlBus.getValue() & CTRL_SET) {
@@ -232,14 +239,21 @@ class Simulation {
         } else {
             aluSvg.classList.remove('read')
         }
+
+        let instructionDesc: SVGinHTML = document.getElementById("control-step") as SVGinHTML
+        instructionDesc.textContent = this.decoder.currentStepDescription()
     }
 
-    public update() {
+    public async update() {
         if (this._state == null) {
             this._state = "step"
         }
+        let clockLine = document.getElementById("clock-line")
+        clockLine.classList.add("high")
         this.update_state()
         this.update_display()
+        await sleep(this.clock_period/2)
+        clockLine.classList.remove("high")
         if (this._state == "step") {
             this._state = null
         }
@@ -250,11 +264,12 @@ class Simulation {
             this._state = "instruction"
             this._stop = false
         }
-        this.update()
-        while (this.decoder.currentStep() != "fetch_step1" && !this._stop) {
-            await sleep(0)
-            this.update()
-        }
+
+        do {
+            await this.update()
+            await sleep(this.clock_period/2)
+        } while (this.decoder.currentStep() != "fetch_step1" && !this._stop)
+
         if (this._state == "instruction") {
             this._state = null
         }
@@ -344,3 +359,16 @@ save b a
 jmp i
 0x04`
 sim.loadProgram(example_1)
+
+function openTab(target: HTMLButtonElement, tabName: string) {
+    let tabContent = document.getElementsByClassName("tabcontent")
+    Array.from(tabContent).forEach((t: HTMLElement)  => t.classList.remove("active"))
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    let tablinks = document.getElementsByClassName("tablinks")
+    Array.from(tablinks).forEach((t: HTMLElement) => t.classList.remove("active"))
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).classList.add("active")
+    target.classList.add("active")
+}

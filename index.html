@@ -43,7 +43,7 @@
               <polyline id="ins-line2" class="line data" points="0,6 25,6"/>
               <polyline id="ins-line1" class="line data" points="0,10 25,10"/>
               <polyline id="ins-line0" class="line data" points="0,14 25,14"/>
-              <g transform="translate(25,-50)">
+              <g transform="translate(25,-50)" id="g-reg-ins">
                 <rect id="svg-reg-ins" class="register" height="100px" width="50px"/>
                 <text class="label small" y="22.5" x="2" rotate="90">S</text>
                 <text id="ins-value" class="label" x="50" y="-25" transform="rotate(90)" text-anchor="middle"
@@ -57,7 +57,7 @@
               <polyline id="pc-ctrl-s" class="line control" points="0,-4 25,-4"/>
               <polyline id="pc-ctrl-e" class="line control" points="0,0 25,0"/>
               <polyline id="pc-ctrl-i" class="line control" points="0,4 25,4"/>
-              <g transform="translate(25,-25)">
+              <g transform="translate(25,-25)" id="g-reg-pc">
                 <rect id="svg-reg-pc" class="register" height="100px" width="50px"/>
                 <text class="label small" x="2" y="17" rotate="90">S</text>
                 <text class="label small" x="2" y="23" rotate="90">E</text>
@@ -66,7 +66,6 @@
                       alignment-baseline="central">00000000
                 </text>
                 <text class="label small" x="50" y="-40" text-anchor="middle" transform="rotate(90)">Program Counter</text>
-
               </g>
             </g>
 
@@ -107,10 +106,11 @@
 
             <g transform="translate(55,287.5) rotate(-90)">
               <text class="label large" text-anchor="middle">Control Unit</text>
+              <text class="label" id="control-step" text-anchor="middle" y="16pt">Foo Bar</text>
             </g>
           </g>
 
-          <g transform="translate(200,25)">
+          <g transform="translate(200,25)" id="g-reg-a">
             <rect id="svg-reg-a" class="register" height="50px" width="100px"/>
             <text class="label small" x="19" y="48">S</text>
             <text class="label small" x="25" y="48">E</text>
@@ -120,7 +120,7 @@
           </g>
           <!--        <rect id="svg-reg-a" class="register" height="50px" width="100px" x="200px" y="25px"/>-->
 
-          <g transform="translate(325,25)">
+          <g transform="translate(325,25)" id="g-reg-b">
             <rect id="svg-reg-b" class="register" height="50px" width="100px"/>
             <text class="label small" x="19" y="48">S</text>
             <text class="label small" x="25" y="48">E</text>
@@ -154,7 +154,7 @@
               <path id="t2-line0" class="line data" d="m  14 0 v 25"/>
             </g>
 
-            <g transform="translate(0,25)">
+            <g transform="translate(0,25)" id="g-reg-t1">
               <rect id="svg-reg-t1" class="register" height="50px" width="100px"/>
               <text class="label small" x="22" y="9">S</text>
               <text id="t1-value" class="label" x="50" y="25" text-anchor="middle" alignment-baseline="central">
@@ -163,7 +163,7 @@
               <text class="label small" x="50" y="40" text-anchor="middle" transform="">Math Register T1</text>
             </g>
             <!--          <rect id="svg-reg-t1" class="register" height="50px" width="100px" x="0" y="25px"/>-->
-            <g transform="translate(125,25)">
+            <g transform="translate(125,25)" id="g-reg-t2">
               <rect id="svg-reg-t2" class="register" height="50px" width="100px"/>
               <text class="label small" x="22" y="9">S</text>
               <text id="t2-value" class="label" x="50" y="25" text-anchor="middle" alignment-baseline="central">
@@ -204,7 +204,7 @@
               <path id="addr-line0" class="line address" d="m 0 14 h 25"/>
             </g>
 
-            <g transform="translate(0,425)">
+            <g transform="translate(0,425)" id="g-reg-addr">
               <rect id="svg-reg-addr" class="register" height="100px" width="50px"/>
               <text class="label small" x="2" y="72" rotate="90">S</text>
               <text id="addr-value" class="label" x="50" y="-25" transform="rotate(90)" text-anchor="middle"
@@ -259,39 +259,127 @@
       <script src="./sim_ui.js"></script>
     </div>
     <div class="instructions">
-      The shown "computer" uses an eight bit architecture, with the following instructions:<br>
-      Operands to the instruction are in the form $i and $r. $r must be either 'a' or 'b' referring to general use
-      registers a and b. $i can be 'a', 'b' or 'i' indicating to use instead the value immediately following the
-      instruction.
-      <ul>
-        <li>
-          Maths:
-          <ul>
-            <li>add $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> + $i<sub>2</sub></li>
-            <li>sub $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> - $i<sub>2</sub></li>
-            <li>and $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise and with $i<sub>2</sub></li>
-            <li>ior $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise inclusive or with $i<sub>2</sub></li>
-            <li>xor $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise exclusive or with $i<sub>2</sub></li>
-            <li>not $i $r &rightarrow; set $r to the bitwise negation of $i</li>
-          </ul>
-        </li>
-        <li>
-          Memory:
-          <ul>
-            <li>save $r<sub>1</sub> $r<sub>2</sub> &rightarrow; saves the value in $r<sub>1</sub> at $r<sub>2</sub></li>
-            <li>load $i $r &rightarrow; loads the value/value at $i into $r</li>
-          </ul>
-        </li>
-        <li>
-          Jumps:
-          <ul>
-            <li>jmp $i &rightarrow; goto $i</li>
-            <li>jlz $i &rightarrow; goto $i if the last maths operation gave a signed value less than 0</li>
-            <li>jgz $i &rightarrow; goto $i if the last maths operation gave a signed value greater than 0</li>
-            <li>jez $i &rightarrow; goto $i is the last maths operation gave a value of zero</li>
-          </ul>
-        </li>
-      </ul>
+
+      <div class="tab">
+        <button class="tablinks active" onclick="openTab(this, 'overview')">Overview</button>
+        <button class="tablinks" onclick="openTab(this, 'isa')">Instruction Set</button>
+        <button class="tablinks" onclick="openTab(this, 'feedback')">Feedback</button>
+      </div>
+
+      <div id="overview" class="tabcontent active">
+        Hello!<br>
+        <p>Welcome to ProcVis, a program to help visualise how processors work</p>
+        <p>The interactive diagram above shows a very simple computer architecture.</p>
+        <p>
+          The small rectangles are registers, these all store an eight digit (eight bit) binary number.
+          The value they are storing at any time is written on them.
+          Each register has up to three control inputs labeled 'S', 'E', and 'I' for Set, Enable, and Increment
+          respectively.
+          When a register has the 'Set' control active it will store the value currently on the data-bus.
+          The 'Enable' control does the opposite, making the register put its value onto the data-bus.
+          Finally, the 'Increment' control is only used by the program counter and causes it to increment (add 1 to)
+          its stored value.
+        </p>
+        <p>
+          The large rectangle on the left, labeled Control Unit (CU), is responsible for decoding the instructions and
+          sending signals to the other components telling them what to do each clock cycle. This includes sending the
+          Set/Enable signals for the registers and ram, and the op-codes for the ALU.
+        </p>
+        <p>
+          The odd shaped block in the middle labeled ALU is the "Arithmetic and Logic Unit". This is responsible for
+          performing any calculations wanted by the program. When given an op-code on its three control lines from the
+          CU, the ALU takes the values stored in registers T1 and T2, performs the corresponding calculation with them,
+          and outputs the result onto the data-bus. There are four extra lines going from the ALU into the Control Unit
+          which carry some extra data about the output. These are called the "Flags", and show if the maths resulted in
+          a value of <span style="text-decoration: underline">Z</span>ero, the
+          <span style="text-decoration: underline">S</span>ign bit was high (i.e. the result is less than zero),
+          if there was a potential <span style="text-decoration: underline">O</span>verflow (e.g. two positive numbers
+          added resulted in a negative), and if the
+          <span style="text-decoration: underline">C</span>arry of the output was high (e.g. addition of unsigned
+          numbers was greater than eight bits).
+        </p>
+        <p>
+          The large block on the right is computer's memory, called Random Access Memory or RAM as we are able to access
+          any part of it at all times. This memory can be read or written to using the data-bus and Set/Enable control
+          lines. To control where we write to in the memory we set an address in the address register, which tells the
+          RAM where we would like to read from or write to. As with the registers, when the 'Set' control is active the
+          memory at the specified address is set to the value on the data-bus, and with the 'Enable' control the value
+          at the address is written to the data-bus.
+        </p>
+        <br>
+        <p>
+          The computer is initially with a program loaded performs the multiplication 3&times;5 and stores the result at
+          address 0x03 before entering an infinite loop.
+          To see how this works use the buttons on the Clock. Fast-forward through to run through the entire program
+          without stopping, use play to run through to the next instruction, or use the step button to advance one clock
+          cycle at a time.
+          To change the numbers being multiplied, change the value in 0x02 (initially 3) and 0x05 (initially 5).
+          Make sure to reset the program beforehand by refreshing the page!
+        </p>
+        <p>
+          If you wish to play around further, the contents of the RAM can be edited by typing new values into each
+          address. You can cycle the display mode between text, signed decimal, hexadecimal, and binary by clicking the
+          address number.
+        </p>
+        <p>
+          When running, components will light up <span class="register read">Red</span> when being read from and
+          <span class="register write">Blue</span> when being written to. The bus lines will change from
+          <span class="line data">blue</span> to <span class="line data high">yellow</span> when active for the data-bus
+          and from <span class="line control">red</span> to <span class="line control high">cyan</span> for control
+          lines.
+        </p>
+
+      </div>
+      <div id="isa" class="tabcontent">
+
+        The shown "computer" uses an eight bit architecture, with the following instructions:<br>
+        Operands to the instruction are in the form $i and $r. $r must be either 'a' or 'b' referring to general use
+        registers a and b. $i can be 'a', 'b' or 'i' indicating to use instead the value immediately following the
+        instruction.
+        <ul>
+          <li>
+            Maths:
+            <ul>
+              <li>add $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> + $i<sub>2</sub></li>
+              <li>sub $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> - $i<sub>2</sub></li>
+              <li>and $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise and with $i<sub>2</sub></li>
+              <li>ior $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise inclusive or with $i<sub>2</sub></li>
+              <li>xor $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise exclusive or with $i<sub>2</sub></li>
+              <li>not $i $r &rightarrow; set $r to the bitwise negation of $i</li>
+            </ul>
+          </li>
+          <li>
+            Memory:
+            <ul>
+              <li>save $r<sub>1</sub> $r<sub>2</sub> &rightarrow; saves the value in $r<sub>1</sub> at $r<sub>2</sub></li>
+              <li>load $i $r &rightarrow; loads the value/value at $i into $r</li>
+            </ul>
+          </li>
+          <li>
+            Jumps:
+            <ul>
+              <li>jmp $i &rightarrow; goto $i</li>
+              <li>jlz $i &rightarrow; goto $i if the last maths operation gave a signed value less than 0</li>
+              <li>jgz $i &rightarrow; goto $i if the last maths operation gave a signed value greater than 0</li>
+              <li>jez $i &rightarrow; goto $i is the last maths operation gave a value of zero</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div id="feedback" class="tabcontent">
+        <p>
+          If you have any feedback about this please email
+          <a href="mailto:benjft.procvis@gmail.com">benjft.procvis@gmail.com</a>.
+        </p>
+        <p>
+          You can also <a href="https://github.com/benjft/ProcVis/issues/new">create a post here</a> if you find any
+          bugs/issues with the program.
+        </p>
+<!--        <p>-->
+<!--          Finally, if you want to help me gather data, compete the quiz here:-->
+<!--        </p>-->
+      </div>
+
     </div>
 <!--  </body>-->
 <!--</html>-->
