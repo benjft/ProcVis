@@ -1,16 +1,84 @@
-abstract class ReadOnlyBus {
+
+class RamWord {
+    protected numValue: number
+    private textValue: string|null
+    public displayMode: number = 0
+
+    constructor(initialValue: number = 0, initialText: string|null = null) {
+        this.numValue = initialValue
+        this.textValue = initialText
+        if (this.textValue != null || this.numValue == 0) {
+            this.displayMode = 3
+        }
+    }
+
+    public readonly getValue = () => this.numValue
+
+    public getTextValue() {
+        if (this.textValue != null) {
+            return this.textValue
+        }
+        if (this.numValue == 0) {
+            return "NO OP"
+        }
+        return null
+    }
+
+    public getSignedValue() {
+        let value = this.numValue & ((1 << (WORD_SIZE-1)) - 1)
+        let sign = (this.numValue & (1 << (WORD_SIZE-1))) != 0
+        if (sign) {
+            value -= 1 << (WORD_SIZE-1)
+        }
+        return value.toString(10)
+    }
+
+    public getHexValue() {
+        let value = this.numValue & ((1 << WORD_SIZE) - 1)
+        return `0x${value.toString(16).padStart(Math.ceil(WORD_SIZE/4), '0')}`
+    }
+
+    public getBinaryValue() {
+        let value = this.numValue & ((1 << WORD_SIZE) - 1)
+        return `0b${value.toString(2).padStart(WORD_SIZE, '0')}`
+    }
+
+    public getDisplayValue() {
+        switch (this.displayMode) {
+            case 0: return this.getSignedValue()
+            case 1: return this.getHexValue()
+            case 2: return this.getBinaryValue()
+            case 3: return this.getTextValue()
+        }
+    }
+
+    public cycleDisplayMode() {
+        this.displayMode += 1
+        this.displayMode %= this.textValue == null && this.numValue != 0 ? 3 : 4
+    }
+
+    public setValue(numValue: number, textValue: string|null = null) {
+        this.textValue = textValue
+        this.numValue = numValue
+    }
+}
+
+
+abstract class ReadOnlyBus extends RamWord{
     readonly size: number
     readonly maxValue: number
-    protected value: number = 0
+    // protected value: number = 0
     protected dirty: boolean = false
 
     constructor(size: number) {
+        super()
         if (size > 31) {
             console.warn(`W:\tMax buss size of 31 bits due to arithmetic limitations.`)
             size = 31
-        }
 
+        }
         this.size = size
+
         this.maxValue = 2**size - 1
     }
 
@@ -22,17 +90,20 @@ abstract class ReadOnlyBus {
         this.dirty = false
     }
 
-    public getValue(): number {
-        return this.value
-    }
+    // public getValue(): number {
+    //     return this.value.getValue()
+    // }
 
     public reset() {
-        this.value = 0
+        this.numValue = 0
+    }
+
+    public setValue(i) {
+        console.warn("can't set a read only bus")
     }
 }
 
 class Bus extends ReadOnlyBus {
-
     public setValue(value: number) {
         value = value & this.maxValue
         if (this.isDirty()) {
@@ -47,12 +118,8 @@ class Bus extends ReadOnlyBus {
             value = value & this.maxValue
         }
 
-        this.value = value
+        this.numValue = value
         this.dirty = true
-    }
-
-    public getValue(): number {
-        return this.value
     }
 }
 
@@ -66,26 +133,33 @@ class Register extends ReadOnlyBus {
 
     public constructor(size: number, name: string, inputBus: Bus, controlBus: Bus) {
         super(size)
-
+        this.displayMode = 2
         this.name = name
 
         this.dataBus = inputBus
         this.controlBus = controlBus
     }
 
+
+    cycleDisplayMode() {
+        // super.cycleDisplayMode();
+        this.displayMode += 1
+        this.displayMode %= 3
+    }
+
     public update_enable() {
         if (this.controlBus.getValue() & CTRL_ENB) {
-            this.dataBus.setValue(this.value)
+            this.dataBus.setValue(this.numValue)
         }
     }
 
     public update_set() {
         let ctrl = this.controlBus.getValue()
         if (ctrl & CTRL_SET) {
-            this.value = this.dataBus.getValue()
+            this.numValue = this.dataBus.getValue()
             this.dirty = true
         } else if (ctrl & CTRL_INC && !this.isDirty()) {
-            this.value = (this.value + 1) % (1 << this.size)
+            this.numValue = (this.numValue + 1) % (1 << this.size)
             this.dirty = true
         }
     }
@@ -181,7 +255,7 @@ class ArithmeticLogicUnit extends ReadOnlyBus {
             flgs |= FLGS_Z // 1 << 3 // set zero flag
         }
         this.dataBus.setValue(res)
-        this.value = flgs
+        this.numValue = flgs
         this.dirty = true
     }
 }
@@ -191,73 +265,6 @@ const RAM_WRITE = 0b010
 const RAM_INSTRUCTIONS = {
     "load": RAM_READ,
     "save": RAM_WRITE
-}
-
-class RamWord {
-    private numValue: number
-    private textValue: string|null
-    public displayMode: number = 0
-
-    constructor(initialValue: number = 0, initialText: string|null = null) {
-        this.numValue = initialValue
-        this.textValue = initialText
-        if (this.textValue != null || this.numValue == 0) {
-            this.displayMode = 3
-        }
-    }
-
-    public readonly getValue = () => this.numValue
-
-    public getTextValue() {
-        if (this.textValue != null) {
-            return this.textValue
-        }
-        if (this.numValue == 0) {
-            return "NO OP"
-        }
-        return null
-    }
-
-    public getSignedValue() {
-        let value = this.numValue & ((1 << (WORD_SIZE-1)) - 1)
-        let sign = (this.numValue & (1 << (WORD_SIZE-1))) != 0
-        if (sign) {
-            value += 1
-        }
-        let str: string = sign ? '-' : ''
-        str += value.toString(10)
-
-        return str
-    }
-
-    public getHexValue() {
-        let value = this.numValue & ((1 << WORD_SIZE) - 1)
-        return `0x${value.toString(16).padStart(Math.ceil(WORD_SIZE/4), '0')}`
-    }
-
-    public getBinaryValue() {
-        let value = this.numValue & ((1 << WORD_SIZE) - 1)
-        return `0b${value.toString(2).padStart(WORD_SIZE, '0')}`
-    }
-
-    public getDisplayValue() {
-        switch (this.displayMode) {
-            case 0: return this.getSignedValue()
-            case 1: return this.getHexValue()
-            case 2: return this.getBinaryValue()
-            case 3: return this.getTextValue()
-        }
-    }
-
-    public cycleDisplayMode() {
-        this.displayMode += 1
-        this.displayMode %= this.textValue == null && this.numValue != 0 ? 3 : 4
-    }
-
-    public setValue(numValue: number, textValue: string|null = null) {
-        this.textValue = textValue
-        this.numValue = numValue
-    }
 }
 
 class RAM {
@@ -329,6 +336,8 @@ class Decoder {
 
     private currentInstruction: funcFunc = this.fetch_step1
     public readonly currentStep = () =>this.currentInstruction.name
+    private description: string = ""
+    public readonly currentStepDescription = () => this.description
 
     public reset() {
         this.currentInstruction = this.fetch_step1
@@ -337,12 +346,14 @@ class Decoder {
     private fetch_step1(): funcFunc {
         this.programControl.setValue(CTRL_ENB)
         this.addressControl.setValue(CTRL_SET)
+        this.description = "Fetch (Step 1): Copy PC into Address Register"
         return this.fetch_step2
     }
 
     private fetch_step2(): funcFunc {
         this.programControl.setValue(CTRL_INC)
         this.addressControl.setValue(0)
+        this.description = "Fetch (Step 2): Clear Control and Increment PC"
         return this.fetch_step3
     }
 
@@ -350,18 +361,23 @@ class Decoder {
         this.programControl.setValue(0)
         this.ramControl.setValue(CTRL_ENB)
         this.instructionControl.setValue(CTRL_SET)
+        this.description = "Fetch (Step 3): Copy Ram into Instruction Register"
         return this.fetch_step4
     }
 
     private fetch_step4(): funcFunc {
         this.ramControl.setValue(0)
         this.instructionControl.setValue(0)
+        this.description = "Fetch (Step 4): Clear Control"
+
         return this.execute
     }
 
+    private executeSteps: number = 0
     private execute(): funcFunc {
         // instructions built as TT III SS D (T->Type, I->Instruction, S->Source, D->Destination)
         let ins = this.instructionBus.getValue()
+        this.executeSteps = 0
         let ins_type = ins >> 6 // get only type bits from instruction
 
         if (ins == 0) {
@@ -380,26 +396,41 @@ class Decoder {
         return this.fetch_step1()
     }
 
+    private ram_ins_name = ""
     private execute_ram_step1(): funcFunc {
         let ins = this.instructionBus.getValue()
         let ins_immediate = 1 & (ins >> 2) // 1 if immediate, 0 if register
         let ins_src_reg = 1 & (ins >> 1) // 0 for A, 1 for B
+        let ins_body = 0b111 & (ins >> 3)
+        this.executeSteps += 1
+        this.ram_ins_name =`${ins_body == RAM_READ ? 'LOAD' : 'SAVE'}`
+        if (ins_immediate)
+            this.ram_ins_name += ' Immediate'
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): Copy `
         if (ins_immediate) {
             this.programControl.setValue(CTRL_ENB)
+            this.description += 'PC'
         } else if (ins_src_reg === 0) {
             this.registerAControl.setValue(CTRL_ENB)
+            this.description += 'Register A'
         } else {
             this.registerBControl.setValue(CTRL_ENB)
+            this.description += 'Register B'
         }
         this.addressControl.setValue(CTRL_SET)
+        this.description += ' into Address Register'
         return this.execute_ram_step2
     }
 
     private execute_ram_step2(): funcFunc {
         let ins = this.instructionBus.getValue()
         let ins_immediate = 1 & (ins >> 2) // 1 if immediate, 0 if register
+        let ins_body = 0b111 & (ins >> 3)
+        this.executeSteps += 1
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): Clear Control`
         if (ins_immediate) {
             this.programControl.setValue(CTRL_INC)
+            this.description += ' and Increment PC'
         } else {
             this.registerAControl.setValue(0)
             this.registerBControl.setValue(0)
@@ -413,49 +444,67 @@ class Decoder {
         let ins_dest_reg = 1 & (ins >> 0) // 0 for A, 1 for B
         let ins_body = 0b111 & (ins >> 3)
         this.programControl.setValue(0) // just in case
-
+        this.executeSteps += 1
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): `
         let ramRW: number
         let regRW: number
         switch (ins_body) {
             case INS_B_RAM_READ:
                 ramRW = CTRL_ENB
                 regRW = CTRL_SET
+                this.description += 'Load Ram into REGISTER'
                 break
             case INS_B_RAM_WRITE:
             default:
                 ramRW = CTRL_SET
                 regRW = CTRL_ENB
+                this.description += 'Save REGISTER into Ram'
         }
 
         this.ramControl.setValue(ramRW)
         if (ins_dest_reg == 0) {
             this.registerAControl.setValue(regRW)
+            this.description = this.description.replace("REGISTER",'Register A')
         } else {
             this.registerBControl.setValue(regRW)
+            this.description = this.description.replace("REGISTER",'Register B')
         }
         return this.execute_ram_step4
     }
 
     private execute_ram_step4(): funcFunc {
+        let ins_body = 0b111 & (this.instructionBus.getValue() >> 3)
+        this.executeSteps += 1
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): Clear Control`
         this.ramControl.setValue(0)
         this.registerAControl.setValue(0)
         this.registerBControl.setValue(0)
         return this.fetch_step1
     }
 
+    private alu_ins_name: string = ""
     private execute_alui_step1(): funcFunc {
+        let ins_body = 0b111 & (this.instructionBus.getValue() >> 3)
+        this.executeSteps += 1
+        this.alu_ins_name = `${Object.keys(ALU_INSTRUCTIONS)[Object.values(ALU_INSTRUCTIONS).indexOf(ins_body)]}`
+        this.alu_ins_name = this.alu_ins_name.toUpperCase() + ' Immediate'
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy PC into Address Register`
         this.programControl.setValue(CTRL_ENB)
         this.addressControl.setValue(CTRL_SET)
         return this.execute_alui_step2
     }
 
     private execute_alui_step2(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control and Increment PC`
         this.programControl.setValue(CTRL_INC)
         this.addressControl.setValue(0)
         return this.execute_alui_step3
     }
 
     private execute_alui_step3(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Ram into `
         let ins = this.instructionBus.getValue()
         let ins_t = 1 & (ins >> 2)
 
@@ -463,8 +512,10 @@ class Decoder {
         this.ramControl.setValue(CTRL_ENB)
 
         if (ins_t == 0) {
+            this.description += 'Register T1'
             this.registerT1Control.setValue(CTRL_SET)
         } else {
+            this.description += 'Register T2'
             this.registerT2Control.setValue(CTRL_SET)
         }
 
@@ -472,6 +523,8 @@ class Decoder {
     }
 
     private execute_alui_step4(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`
         this.ramControl.setValue(0)
         this.registerT1Control.setValue(0)
         this.registerT2Control.setValue(0)
@@ -486,19 +539,26 @@ class Decoder {
     }
 
     private execute_alui_step5(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Register `
         let ins = this.instructionBus.getValue()
         let ins_t = 1 & (ins >> 2)
         let ins_r = 1 & (ins >> 1)
 
         if (ins_r == 0) {
+            this.description += 'A'
             this.registerAControl.setValue(CTRL_ENB)
         } else {
+            this.description += 'B'
             this.registerBControl.setValue(CTRL_ENB)
         }
+        this.description += ' into Register '
 
         if (ins_t == 0) {
+            this.description += 'T2'
             this.registerT2Control.setValue(CTRL_SET)
         } else {
+            this.description += 'T1'
             this.registerT1Control.setValue(CTRL_SET)
         }
 
@@ -506,6 +566,8 @@ class Decoder {
     }
 
     private execute_alui_step6(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`
         this.registerAControl.setValue(0)
         this.registerBControl.setValue(0)
         this.registerT1Control.setValue(0)
@@ -516,19 +578,31 @@ class Decoder {
 
     private execute_alur_step1(): funcFunc {
         let ins = this.instructionBus.getValue()
+        let ins_body = 0b111 & (this.instructionBus.getValue() >> 3)
+        this.executeSteps += 1
+        this.alu_ins_name = `${Object.keys(ALU_INSTRUCTIONS)[Object.values(ALU_INSTRUCTIONS).indexOf(ins_body)]}`
+        this.alu_ins_name = this.alu_ins_name.toUpperCase()
+
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Register `
+
         let ins_t1 = 1 & (ins >> 2)
 
         if (ins_t1) {
+            this.description += 'B'
             this.registerBControl.setValue(CTRL_ENB)
         } else {
+            this.description += 'A'
             this.registerAControl.setValue(CTRL_ENB)
         }
+        this.description += ' into T1'
         this.registerT1Control.setValue(CTRL_SET)
 
         return this.execute_alur_step2
     }
 
     private execute_alur_step2(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`
         this.registerAControl.setValue(0)
         this.registerBControl.setValue(0)
         this.registerT1Control.setValue(0)
@@ -543,20 +617,27 @@ class Decoder {
     }
 
     private execute_alur_step3(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Register `
         let ins = this.instructionBus.getValue()
         let ins_t2 = 1 & (ins >> 1)
 
         if (ins_t2) {
+            this.description += 'B'
             this.registerBControl.setValue(CTRL_ENB)
         } else {
+            this.description += 'A'
             this.registerAControl.setValue(CTRL_ENB)
         }
+        this.description += ' into Register T2'
         this.registerT2Control.setValue(CTRL_SET)
 
         return this.execute_alur_step4
     }
 
     private execute_alur_step4(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`
         this.registerAControl.setValue(0)
         this.registerBControl.setValue(0)
         this.registerT2Control.setValue(0)
@@ -565,30 +646,44 @@ class Decoder {
     }
 
     private execute_alu_step7(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Compute value and Copy Result into Register`
         let ins = this.instructionBus.getValue()
         let ins_body = 0b111 & (ins >> 3)
         let ins_dest = 1 & ins
 
         this.aluControl.setValue(ins_body)
         if (ins_dest == 0) {
+            this.description += 'A'
             this.registerAControl.setValue(CTRL_SET)
         } else {
+            this.description += 'B'
             this.registerBControl.setValue(CTRL_SET)
         }
         return this.execute_alu_step8
     }
 
     private execute_alu_step8(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`
         this.aluControl.setValue(0)
         this.registerAControl.setValue(0)
         this.registerBControl.setValue(0)
         return this.fetch_step1
     }
 
+    private jmp_ins_name = ""
     private execute_jump(): funcFunc {
+
         let ins = this.instructionBus.getValue()
         let ins_body = 0b111 & (ins >> 3)
         let ins_immediate = 1 & (ins >> 2)
+
+        this.executeSteps += 1
+        this.jmp_ins_name = Object.keys(JMP_INSTRUCTIONS)[Object.values(JMP_INSTRUCTIONS).indexOf(ins_body)].toUpperCase()
+        if (ins_immediate)
+            this.jmp_ins_name += ' Immediate'
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Check Flags`
 
         let condition_flag = true
         if (ins_body == INS_JMP_JEZ) {
@@ -605,15 +700,17 @@ class Decoder {
             }
         }
 
+        this.description += ` (${condition_flag})`
+
         if (condition_flag) {
-            return this.execute_jump_step1()
+            return this.execute_jump_step1
         }
 
         if (ins_immediate) {
             this.programControl.setValue(CTRL_INC)
             return this.execute_jump_step4
         } else {
-            return this.fetch_step1()
+            return this.fetch_step1
         }
     }
 
@@ -621,35 +718,48 @@ class Decoder {
         let ins = this.instructionBus.getValue()
         let ins_immediate = 1 & (ins >> 2)
         let ins_register = 1 & (ins >> 1)
+        this.executeSteps += 1
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): `
 
         if (ins_immediate) {
+            this.description += 'Copy PC into Address Register'
             this.programControl.setValue(CTRL_ENB)
             this.addressControl.setValue(CTRL_SET)
             return this.execute_jump_step2
         } else {
+            this.description += 'Copy Register '
             if (ins_register == 0) {
+                this.description += 'A'
                 this.registerAControl.setValue(CTRL_ENB)
             } else {
+                this.description += 'B'
                 this.registerBControl.setValue(CTRL_ENB)
             }
+            this.description += ' into PC'
             this.programControl.setValue(CTRL_SET)
             return this.execute_jump_step4
         }
     }
 
     private execute_jump_step2(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Clear Control and Increment PC`
         this.programControl.setValue(CTRL_INC)
         this.addressControl.setValue(0)
         return this.execute_jump_step3
     }
 
     private execute_jump_step3(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Copy Ram into PC`
         this.ramControl.setValue(CTRL_ENB)
         this.programControl.setValue(CTRL_SET)
         return this.execute_jump_step4
     }
 
     private execute_jump_step4(): funcFunc {
+        this.executeSteps += 1
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Clear Control`
         this.ramControl.setValue(0)
         this.registerAControl.setValue(0)
         this.registerBControl.setValue(0)
