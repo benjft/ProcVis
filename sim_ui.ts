@@ -179,14 +179,43 @@ class Simulation {
         this.registers.forEach(r => {
             update_bus(`${r.name}-line`, "01234567".split(""), r.getValue())
             update_bus(`${r.name}-ctrl`, "-s -e -i".split(" "), r.controlBus.getValue())
-            let textValue = document.getElementById(`${r.name}-value`) as SVGinHTML;
+            let textValue = document.getElementById(`${r.name}-value`) as SVGinHTML
             textValue.textContent = r.getValue().toString(2).padStart(r.size, '0')
+
+            let register = document.getElementById(`svg-reg-${r.name}`) as SVGinHTML
+            if (r.controlBus.getValue() & CTRL_SET) {
+                if (!register.classList.contains('write'))
+                    register.classList.add('write')
+            } else {
+                register.classList.remove('write')
+            }
+
+            if (r.controlBus.getValue() & CTRL_ENB) {
+                if (!register.classList.contains('read'))
+                    register.classList.add('read')
+            } else {
+                register.classList.remove('read')
+            }
         })
 
         update_bus("alu-ctrl", "-0 -1 -2".split(" "), this.ctrlALU.getValue())
         update_bus("flgs", "-0 -1 -2 -3".split(" "), this.alu.getValue())
         update_bus("ram-ctrl", "-s -e".split(" "), this.ctrlRam.getValue())
 
+        let ramSvg = document.getElementById('svg-ram')
+        if (this.ctrlRam.getValue() & CTRL_SET) {
+            if (!ramSvg.classList.contains('write'))
+                ramSvg.classList.add('write')
+        } else {
+            ramSvg.classList.remove('write')
+        }
+
+        if (this.ctrlRam.getValue() & CTRL_ENB) {
+            if (!ramSvg.classList.contains('read'))
+                ramSvg.classList.add('read')
+        } else {
+            ramSvg.classList.remove('read')
+        }
         this.ram.data.forEach((value, index) => {
             let inputBox = document.getElementById(`ram-input${index}`) as HTMLInputElement
             inputBox.parentElement.parentElement.classList.remove("active")
@@ -195,6 +224,14 @@ class Simulation {
             }
         })
         this.setRamScroll()
+
+        let aluSvg = document.getElementById('svg-alu')
+        if (this.ctrlALU.getValue() != 0) {
+            if (!aluSvg.classList.contains('read'))
+                aluSvg.classList.add('read')
+        } else {
+            aluSvg.classList.remove('read')
+        }
     }
 
     public update() {
@@ -215,7 +252,7 @@ class Simulation {
         }
         this.update()
         while (this.decoder.currentStep() != "fetch_step1" && !this._stop) {
-            await sleep(250)
+            await sleep(0)
             this.update()
         }
         if (this._state == "instruction") {

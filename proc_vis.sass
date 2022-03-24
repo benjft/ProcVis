@@ -12,6 +12,7 @@ body
   position: relative
   overflow-x: auto
 
+
 svg
   overflow: visible
 
@@ -55,26 +56,22 @@ svg
   &.small
     font-size: xx-small
 
-.decoder
-  fill: indianred
-  stroke: darkred
+//.decoder
+//  fill: indianred
+//  stroke: darkred
 
-.register
-  fill: seagreen
-  stroke: darkgreen
+.register, .alu, .decoder, .ram
+  fill: lightgoldenrodyellow
+  stroke: darkorange
 
-.alu
-  fill: cornflowerblue
-  stroke: darkblue
+//.alu
+//  fill: cornflowerblue
+//  stroke: darkblue
 
 .scroll-box
   height: 100%
 
-.ram
-  fill: lightgoldenrodyellow
-  stroke: darkorange
-
-  &.input
+.ram.input
     position: absolute
     //display: flex
     // positioning over same element in SVG
@@ -85,16 +82,24 @@ svg
     max-height: 513px
     overflow-y: auto
 
+.ram, .register, .alu
+  &.read
+    stroke: darkred
+    fill: indianred
+  &.write
+    stroke: darkblue
+    fill: cornflowerblue
+
 
 .inputLabel
   font-size: 16pt
   font-family: monospace
 
 .inputArea
-  background-color: transparent
+  background-color: lightgoldenrodyellow
   font-family: monospace
   font-size: 16pt
-  &:invalid
+  //&:invalid
     background-color: indianred
 
 #ram-table
@@ -109,25 +114,24 @@ svg
 td
   padding: 5pt
 
-
 .line
   fill: none
   stroke-width: 3px
 
   &.control
-    stroke: #500
+    stroke: #a11
     &.high
-      stroke: #5aa
+      stroke: #1aa
 
   &.data
-    stroke: #005
+    stroke: #11a
     &.high
-      stroke: #aa5
+      stroke: #aa1
 
   &.address
-    stroke: #050
+    stroke: #1a1
     &.high
-      stroke: #a5a
+      stroke: #a1a
 
   &.background
     //stroke: white
