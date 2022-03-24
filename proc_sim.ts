@@ -34,6 +34,7 @@ abstract class ReadOnlyBus {
 class Bus extends ReadOnlyBus {
 
     public setValue(value: number) {
+        value = value & this.maxValue
         if (this.isDirty()) {
             console.warn(`W:\tBus already modified this phase!`)
         }
