@@ -20,8 +20,10 @@ svg {
 
 .instructions {
   flex: 1;
-  background-color: grey;
+  display: flex;
+  flex-direction: column;
   min-width: 33%;
+  max-height: 100vh;
 }
 
 .button:hover > .clock-button {
@@ -75,10 +77,12 @@ svg {
 }
 
 .ram.read, .register.read, .alu.read {
+  color: darkred;
   stroke: darkred;
   fill: indianred;
 }
 .ram.write, .register.write, .alu.write {
+  color: darkblue;
   stroke: darkblue;
   fill: cornflowerblue;
 }
@@ -86,6 +90,7 @@ svg {
 .inputLabel {
   font-size: 16pt;
   font-family: monospace;
+  cursor: pointer;
 }
 
 .inputArea {
@@ -115,25 +120,63 @@ td {
   stroke-width: 3px;
 }
 .line.control {
-  stroke: #a11;
+  stroke: #e11;
+  color: #e11;
 }
 .line.control.high {
-  stroke: #1aa;
+  color: #1ee;
+  stroke: #1ee;
 }
-.line.data {
-  stroke: #11a;
+.line.data, .line.address {
+  stroke: #11e;
+  color: #11e;
 }
-.line.data.high {
-  stroke: #aa1;
-}
-.line.address {
-  stroke: #1a1;
-}
-.line.address.high {
-  stroke: #a1a;
+.line.data.high, .line.address.high {
+  color: #ee1;
+  stroke: #ee1;
 }
 .line.background {
   stroke-width: 4px;
+}
+
+.g-reg {
+  cursor: pointer;
+}
+
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+.tab button:hover {
+  background-color: #ddd;
+}
+
+.tab button.active {
+  background-color: #ccc;
+}
+
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+  overflow-y: auto;
+}
+.tabcontent.active {
+  display: block;
 }
 
 /*# sourceMappingURL=proc_vis.css.map */

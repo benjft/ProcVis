@@ -1,6 +1,59 @@
-class ReadOnlyBus {
+class RamWord {
+    constructor(initialValue = 0, initialText = null) {
+        this.displayMode = 0;
+        this.getValue = () => this.numValue;
+        this.numValue = initialValue;
+        this.textValue = initialText;
+        if (this.textValue != null || this.numValue == 0) {
+            this.displayMode = 3;
+        }
+    }
+    getTextValue() {
+        if (this.textValue != null) {
+            return this.textValue;
+        }
+        if (this.numValue == 0) {
+            return "NO OP";
+        }
+        return null;
+    }
+    getSignedValue() {
+        let value = this.numValue & ((1 << (WORD_SIZE - 1)) - 1);
+        let sign = (this.numValue & (1 << (WORD_SIZE - 1))) != 0;
+        if (sign) {
+            value -= 1 << (WORD_SIZE - 1);
+        }
+        return value.toString(10);
+    }
+    getHexValue() {
+        let value = this.numValue & ((1 << WORD_SIZE) - 1);
+        return `0x${value.toString(16).padStart(Math.ceil(WORD_SIZE / 4), '0')}`;
+    }
+    getBinaryValue() {
+        let value = this.numValue & ((1 << WORD_SIZE) - 1);
+        return `0b${value.toString(2).padStart(WORD_SIZE, '0')}`;
+    }
+    getDisplayValue() {
+        switch (this.displayMode) {
+            case 0: return this.getSignedValue();
+            case 1: return this.getHexValue();
+            case 2: return this.getBinaryValue();
+            case 3: return this.getTextValue();
+        }
+    }
+    cycleDisplayMode() {
+        this.displayMode += 1;
+        this.displayMode %= this.textValue == null && this.numValue != 0 ? 3 : 4;
+    }
+    setValue(numValue, textValue = null) {
+        this.textValue = textValue;
+        this.numValue = numValue;
+    }
+}
+class ReadOnlyBus extends RamWord {
     constructor(size) {
-        this.value = 0;
+        super();
+        // protected value: number = 0
         this.dirty = false;
         if (size > 31) {
             console.warn(`W:\tMax buss size of 31 bits due to arithmetic limitations.`);
@@ -15,11 +68,14 @@ class ReadOnlyBus {
     clean() {
         this.dirty = false;
     }
-    getValue() {
-        return this.value;
-    }
+    // public getValue(): number {
+    //     return this.value.getValue()
+    // }
     reset() {
-        this.value = 0;
+        this.numValue = 0;
+    }
+    setValue(i) {
+        console.warn("can't set a read only bus");
     }
 }
 class Bus extends ReadOnlyBus {
@@ -36,11 +92,8 @@ class Bus extends ReadOnlyBus {
             console.warn(`W:\tValue (${value}) larger than maximum (${this.maxValue}) - truncating.`);
             value = value & this.maxValue;
         }
-        this.value = value;
+        this.numValue = value;
         this.dirty = true;
-    }
-    getValue() {
-        return this.value;
     }
 }
 const CTRL_SET = 0b001;
@@ -49,23 +102,29 @@ const CTRL_INC = 0b100; // only used by program counter
 class Register extends ReadOnlyBus {
     constructor(size, name, inputBus, controlBus) {
         super(size);
+        this.displayMode = 2;
         this.name = name;
         this.dataBus = inputBus;
         this.controlBus = controlBus;
     }
+    cycleDisplayMode() {
+        // super.cycleDisplayMode();
+        this.displayMode += 1;
+        this.displayMode %= 3;
+    }
     update_enable() {
         if (this.controlBus.getValue() & CTRL_ENB) {
-            this.dataBus.setValue(this.value);
+            this.dataBus.setValue(this.numValue);
         }
     }
     update_set() {
         let ctrl = this.controlBus.getValue();
         if (ctrl & CTRL_SET) {
-            this.value = this.dataBus.getValue();
+            this.numValue = this.dataBus.getValue();
             this.dirty = true;
         }
         else if (ctrl & CTRL_INC && !this.isDirty()) {
-            this.value = (this.value + 1) % (1 << this.size);
+            this.numValue = (this.numValue + 1) % (1 << this.size);
             this.dirty = true;
         }
     }
@@ -141,7 +200,7 @@ class ArithmeticLogicUnit extends ReadOnlyBus {
             flgs |= FLGS_Z; // 1 << 3 // set zero flag
         }
         this.dataBus.setValue(res);
-        this.value = flgs;
+        this.numValue = flgs;
         this.dirty = true;
     }
 }
@@ -151,60 +210,6 @@ const RAM_INSTRUCTIONS = {
     "load": RAM_READ,
     "save": RAM_WRITE
 };
-class RamWord {
-    constructor(initialValue = 0, initialText = null) {
-        this.displayMode = 0;
-        this.getValue = () => this.numValue;
-        this.numValue = initialValue;
-        this.textValue = initialText;
-        if (this.textValue != null || this.numValue == 0) {
-            this.displayMode = 3;
-        }
-    }
-    getTextValue() {
-        if (this.textValue != null) {
-            return this.textValue;
-        }
-        if (this.numValue == 0) {
-            return "NO OP";
-        }
-        return null;
-    }
-    getSignedValue() {
-        let value = this.numValue & ((1 << (WORD_SIZE - 1)) - 1);
-        let sign = (this.numValue & (1 << (WORD_SIZE - 1))) != 0;
-        if (sign) {
-            value += 1;
-        }
-        let str = sign ? '-' : '';
-        str += value.toString(10);
-        return str;
-    }
-    getHexValue() {
-        let value = this.numValue & ((1 << WORD_SIZE) - 1);
-        return `0x${value.toString(16).padStart(Math.ceil(WORD_SIZE / 4), '0')}`;
-    }
-    getBinaryValue() {
-        let value = this.numValue & ((1 << WORD_SIZE) - 1);
-        return `0b${value.toString(2).padStart(WORD_SIZE, '0')}`;
-    }
-    getDisplayValue() {
-        switch (this.displayMode) {
-            case 0: return this.getSignedValue();
-            case 1: return this.getHexValue();
-            case 2: return this.getBinaryValue();
-            case 3: return this.getTextValue();
-        }
-    }
-    cycleDisplayMode() {
-        this.displayMode += 1;
-        this.displayMode %= this.textValue == null && this.numValue != 0 ? 3 : 4;
-    }
-    setValue(numValue, textValue = null) {
-        this.textValue = textValue;
-        this.numValue = numValue;
-    }
-}
 class RAM {
     constructor(wordSize, controlBus, addressBus, dataBus) {
         this.controlBus = controlBus;
@@ -249,6 +254,12 @@ class Decoder {
     constructor(instructionControl, instructionBus, programControl, ramControl, registerAControl, registerBControl, registerT1Control, registerT2Control, addressControl, aluControl, flags) {
         this.currentInstruction = this.fetch_step1;
         this.currentStep = () => this.currentInstruction.name;
+        this.description = "";
+        this.currentStepDescription = () => this.description;
+        this.executeSteps = 0;
+        this.ram_ins_name = "";
+        this.alu_ins_name = "";
+        this.jmp_ins_name = "";
         this.instructionControl = instructionControl;
         this.instructionBus = instructionBus;
         this.programControl = programControl;
@@ -267,27 +278,32 @@ class Decoder {
     fetch_step1() {
         this.programControl.setValue(CTRL_ENB);
         this.addressControl.setValue(CTRL_SET);
+        this.description = "Fetch (Step 1): Copy PC into Address Register";
         return this.fetch_step2;
     }
     fetch_step2() {
         this.programControl.setValue(CTRL_INC);
         this.addressControl.setValue(0);
+        this.description = "Fetch (Step 2): Clear Control and Increment PC";
         return this.fetch_step3;
     }
     fetch_step3() {
         this.programControl.setValue(0);
         this.ramControl.setValue(CTRL_ENB);
         this.instructionControl.setValue(CTRL_SET);
+        this.description = "Fetch (Step 3): Copy Ram into Instruction Register";
         return this.fetch_step4;
     }
     fetch_step4() {
         this.ramControl.setValue(0);
         this.instructionControl.setValue(0);
+        this.description = "Fetch (Step 4): Clear Control";
         return this.execute;
     }
     execute() {
         // instructions built as TT III SS D (T->Type, I->Instruction, S->Source, D->Destination)
         let ins = this.instructionBus.getValue();
+        this.executeSteps = 0;
         let ins_type = ins >> 6; // get only type bits from instruction
         if (ins == 0) {
             return this.fetch_step1();
@@ -308,23 +324,37 @@ class Decoder {
         let ins = this.instructionBus.getValue();
         let ins_immediate = 1 & (ins >> 2); // 1 if immediate, 0 if register
         let ins_src_reg = 1 & (ins >> 1); // 0 for A, 1 for B
+        let ins_body = 0b111 & (ins >> 3);
+        this.executeSteps += 1;
+        this.ram_ins_name = `${ins_body == RAM_READ ? 'LOAD' : 'SAVE'}`;
+        if (ins_immediate)
+            this.ram_ins_name += ' Immediate';
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): Copy `;
         if (ins_immediate) {
             this.programControl.setValue(CTRL_ENB);
+            this.description += 'PC';
         }
         else if (ins_src_reg === 0) {
             this.registerAControl.setValue(CTRL_ENB);
+            this.description += 'Register A';
         }
         else {
             this.registerBControl.setValue(CTRL_ENB);
+            this.description += 'Register B';
         }
         this.addressControl.setValue(CTRL_SET);
+        this.description += ' into Address Register';
         return this.execute_ram_step2;
     }
     execute_ram_step2() {
         let ins = this.instructionBus.getValue();
         let ins_immediate = 1 & (ins >> 2); // 1 if immediate, 0 if register
+        let ins_body = 0b111 & (ins >> 3);
+        this.executeSteps += 1;
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): Clear Control`;
         if (ins_immediate) {
             this.programControl.setValue(CTRL_INC);
+            this.description += ' and Increment PC';
         }
         else {
             this.registerAControl.setValue(0);
@@ -338,57 +368,79 @@ class Decoder {
         let ins_dest_reg = 1 & (ins >> 0); // 0 for A, 1 for B
         let ins_body = 0b111 & (ins >> 3);
         this.programControl.setValue(0); // just in case
+        this.executeSteps += 1;
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): `;
         let ramRW;
         let regRW;
         switch (ins_body) {
             case INS_B_RAM_READ:
                 ramRW = CTRL_ENB;
                 regRW = CTRL_SET;
+                this.description += 'Load Ram into REGISTER';
                 break;
             case INS_B_RAM_WRITE:
             default:
                 ramRW = CTRL_SET;
                 regRW = CTRL_ENB;
+                this.description += 'Save REGISTER into Ram';
         }
         this.ramControl.setValue(ramRW);
         if (ins_dest_reg == 0) {
             this.registerAControl.setValue(regRW);
+            this.description = this.description.replace("REGISTER", 'Register A');
         }
         else {
             this.registerBControl.setValue(regRW);
+            this.description = this.description.replace("REGISTER", 'Register B');
         }
         return this.execute_ram_step4;
     }
     execute_ram_step4() {
+        let ins_body = 0b111 & (this.instructionBus.getValue() >> 3);
+        this.executeSteps += 1;
+        this.description = `${this.ram_ins_name} (Step ${this.executeSteps}): Clear Control`;
         this.ramControl.setValue(0);
         this.registerAControl.setValue(0);
         this.registerBControl.setValue(0);
         return this.fetch_step1;
     }
     execute_alui_step1() {
+        let ins_body = 0b111 & (this.instructionBus.getValue() >> 3);
+        this.executeSteps += 1;
+        this.alu_ins_name = `${Object.keys(ALU_INSTRUCTIONS)[Object.values(ALU_INSTRUCTIONS).indexOf(ins_body)]}`;
+        this.alu_ins_name = this.alu_ins_name.toUpperCase() + ' Immediate';
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy PC into Address Register`;
         this.programControl.setValue(CTRL_ENB);
         this.addressControl.setValue(CTRL_SET);
         return this.execute_alui_step2;
     }
     execute_alui_step2() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control and Increment PC`;
         this.programControl.setValue(CTRL_INC);
         this.addressControl.setValue(0);
         return this.execute_alui_step3;
     }
     execute_alui_step3() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Ram into `;
         let ins = this.instructionBus.getValue();
         let ins_t = 1 & (ins >> 2);
         this.programControl.setValue(0);
         this.ramControl.setValue(CTRL_ENB);
         if (ins_t == 0) {
+            this.description += 'Register T1';
             this.registerT1Control.setValue(CTRL_SET);
         }
         else {
+            this.description += 'Register T2';
             this.registerT2Control.setValue(CTRL_SET);
         }
         return this.execute_alui_step4;
     }
     execute_alui_step4() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`;
         this.ramControl.setValue(0);
         this.registerT1Control.setValue(0);
         this.registerT2Control.setValue(0);
@@ -401,24 +453,33 @@ class Decoder {
         return this.execute_alui_step5;
     }
     execute_alui_step5() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Register `;
         let ins = this.instructionBus.getValue();
         let ins_t = 1 & (ins >> 2);
         let ins_r = 1 & (ins >> 1);
         if (ins_r == 0) {
+            this.description += 'A';
             this.registerAControl.setValue(CTRL_ENB);
         }
         else {
+            this.description += 'B';
             this.registerBControl.setValue(CTRL_ENB);
         }
+        this.description += ' into Register ';
         if (ins_t == 0) {
+            this.description += 'T2';
             this.registerT2Control.setValue(CTRL_SET);
         }
         else {
+            this.description += 'T1';
             this.registerT1Control.setValue(CTRL_SET);
         }
         return this.execute_alui_step6;
     }
     execute_alui_step6() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`;
         this.registerAControl.setValue(0);
         this.registerBControl.setValue(0);
         this.registerT1Control.setValue(0);
@@ -427,17 +488,27 @@ class Decoder {
     }
     execute_alur_step1() {
         let ins = this.instructionBus.getValue();
+        let ins_body = 0b111 & (this.instructionBus.getValue() >> 3);
+        this.executeSteps += 1;
+        this.alu_ins_name = `${Object.keys(ALU_INSTRUCTIONS)[Object.values(ALU_INSTRUCTIONS).indexOf(ins_body)]}`;
+        this.alu_ins_name = this.alu_ins_name.toUpperCase();
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Register `;
         let ins_t1 = 1 & (ins >> 2);
         if (ins_t1) {
+            this.description += 'B';
             this.registerBControl.setValue(CTRL_ENB);
         }
         else {
+            this.description += 'A';
             this.registerAControl.setValue(CTRL_ENB);
         }
+        this.description += ' into T1';
         this.registerT1Control.setValue(CTRL_SET);
         return this.execute_alur_step2;
     }
     execute_alur_step2() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`;
         this.registerAControl.setValue(0);
         this.registerBControl.setValue(0);
         this.registerT1Control.setValue(0);
@@ -450,37 +521,50 @@ class Decoder {
         return this.execute_alur_step3;
     }
     execute_alur_step3() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Copy Register `;
         let ins = this.instructionBus.getValue();
         let ins_t2 = 1 & (ins >> 1);
         if (ins_t2) {
+            this.description += 'B';
             this.registerBControl.setValue(CTRL_ENB);
         }
         else {
+            this.description += 'A';
             this.registerAControl.setValue(CTRL_ENB);
         }
+        this.description += ' into Register T2';
         this.registerT2Control.setValue(CTRL_SET);
         return this.execute_alur_step4;
     }
     execute_alur_step4() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`;
         this.registerAControl.setValue(0);
         this.registerBControl.setValue(0);
         this.registerT2Control.setValue(0);
         return this.execute_alu_step7;
     }
     execute_alu_step7() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Compute value and Copy Result into Register`;
         let ins = this.instructionBus.getValue();
         let ins_body = 0b111 & (ins >> 3);
         let ins_dest = 1 & ins;
         this.aluControl.setValue(ins_body);
         if (ins_dest == 0) {
+            this.description += 'A';
             this.registerAControl.setValue(CTRL_SET);
         }
         else {
+            this.description += 'B';
             this.registerBControl.setValue(CTRL_SET);
         }
         return this.execute_alu_step8;
     }
     execute_alu_step8() {
+        this.executeSteps += 1;
+        this.description = `${this.alu_ins_name} (Step ${this.executeSteps}): Clear Control`;
         this.aluControl.setValue(0);
         this.registerAControl.setValue(0);
         this.registerBControl.setValue(0);
@@ -490,6 +574,11 @@ class Decoder {
         let ins = this.instructionBus.getValue();
         let ins_body = 0b111 & (ins >> 3);
         let ins_immediate = 1 & (ins >> 2);
+        this.executeSteps += 1;
+        this.jmp_ins_name = Object.keys(JMP_INSTRUCTIONS)[Object.values(JMP_INSTRUCTIONS).indexOf(ins_body)].toUpperCase();
+        if (ins_immediate)
+            this.jmp_ins_name += ' Immediate';
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Check Flags`;
         let condition_flag = true;
         if (ins_body == INS_JMP_JEZ) {
             if (!(this.flags.getValue() & FLGS_Z)) {
@@ -506,48 +595,62 @@ class Decoder {
                 condition_flag = false;
             }
         }
+        this.description += ` (${condition_flag})`;
         if (condition_flag) {
-            return this.execute_jump_step1();
+            return this.execute_jump_step1;
         }
         if (ins_immediate) {
             this.programControl.setValue(CTRL_INC);
             return this.execute_jump_step4;
         }
         else {
-            return this.fetch_step1();
+            return this.fetch_step1;
         }
     }
     execute_jump_step1() {
         let ins = this.instructionBus.getValue();
         let ins_immediate = 1 & (ins >> 2);
         let ins_register = 1 & (ins >> 1);
+        this.executeSteps += 1;
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): `;
         if (ins_immediate) {
+            this.description += 'Copy PC into Address Register';
             this.programControl.setValue(CTRL_ENB);
             this.addressControl.setValue(CTRL_SET);
             return this.execute_jump_step2;
         }
         else {
+            this.description += 'Copy Register ';
             if (ins_register == 0) {
+                this.description += 'A';
                 this.registerAControl.setValue(CTRL_ENB);
             }
             else {
+                this.description += 'B';
                 this.registerBControl.setValue(CTRL_ENB);
             }
+            this.description += ' into PC';
             this.programControl.setValue(CTRL_SET);
             return this.execute_jump_step4;
         }
     }
     execute_jump_step2() {
+        this.executeSteps += 1;
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Clear Control and Increment PC`;
         this.programControl.setValue(CTRL_INC);
         this.addressControl.setValue(0);
         return this.execute_jump_step3;
     }
     execute_jump_step3() {
+        this.executeSteps += 1;
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Copy Ram into PC`;
         this.ramControl.setValue(CTRL_ENB);
         this.programControl.setValue(CTRL_SET);
         return this.execute_jump_step4;
     }
     execute_jump_step4() {
+        this.executeSteps += 1;
+        this.description = `${this.jmp_ins_name} (Step ${this.executeSteps}): Clear Control`;
         this.ramControl.setValue(0);
         this.registerAControl.setValue(0);
         this.registerBControl.setValue(0);

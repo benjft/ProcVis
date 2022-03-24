@@ -5,6 +5,7 @@ const CTRL_SIZE_SET_ENB_INC = 3;
 const ALU_CTRL_SIZE = 3;
 class Simulation {
     constructor() {
+        this.clock_period = 250;
         this.cleanBusses = () => this.busses.forEach(b => b.clean());
         this._stop = false;
         this.stop = () => this._stop = true;
@@ -15,23 +16,35 @@ class Simulation {
         this.regIns = new Register(WORD_SIZE, "ins", this.dataBus, this.ctrlIns);
         this.ctrlPC = new Bus(CTRL_SIZE_SET_ENB_INC);
         this.regPC = new Register(WORD_SIZE, "pc", this.dataBus, this.ctrlPC);
+        this.regPC.displayMode = 1;
         this.ctrlAddress = new Bus(CTRL_SIZE_SET);
         this.regAddress = new Register(WORD_SIZE, "addr", this.dataBus, this.ctrlAddress);
+        this.regAddress.displayMode = 1;
         this.ctrlRam = new Bus(CTRL_SIZE_SET_ENB);
         this.ram = new RAM(WORD_SIZE, this.ctrlRam, this.regAddress, this.dataBus);
         this.initializeRamDisplay();
         this.ctrlA = new Bus(CTRL_SIZE_SET_ENB);
         this.regA = new Register(WORD_SIZE, "a", this.dataBus, this.ctrlA);
+        this.regA.displayMode = 0;
         this.ctrlB = new Bus(CTRL_SIZE_SET_ENB);
         this.regB = new Register(WORD_SIZE, "b", this.dataBus, this.ctrlB);
+        this.regB.displayMode = 0;
         this.ctrlT1 = new Bus(CTRL_SIZE_SET);
         this.regT1 = new Register(WORD_SIZE, "t1", this.dataBus, this.ctrlT1);
+        this.regT1.displayMode = 0;
         this.ctrlT2 = new Bus(CTRL_SIZE_SET);
         this.regT2 = new Register(WORD_SIZE, "t2", this.dataBus, this.ctrlT2);
+        this.regT2.displayMode = 0;
         this.ctrlALU = new Bus(ALU_CTRL_SIZE);
         this.alu = new ArithmeticLogicUnit(this.regT1, this.regT2, this.dataBus, this.ctrlALU);
         this.decoder = new Decoder(this.ctrlIns, this.regIns, this.ctrlPC, this.ctrlRam, this.ctrlA, this.ctrlB, this.ctrlT1, this.ctrlT2, this.ctrlAddress, this.ctrlALU, this.alu);
         this.registers = [this.regIns, this.regPC, this.regA, this.regB, this.regT1, this.regT2, this.regAddress];
+        this.registers.forEach(r => {
+            document.getElementById(`g-reg-${r.name}`).onclick = () => {
+                r.cycleDisplayMode();
+                this.update_display();
+            };
+        });
         this.busses = [...this.registers,
             this.ctrlIns, this.ctrlPC, this.ctrlA, this.ctrlB, this.ctrlT1, this.ctrlT2, this.ctrlAddress,
             this.ctrlALU, this.alu, this.ctrlRam, this.dataBus
@@ -116,7 +129,7 @@ class Simulation {
             update_bus(`${r.name}-line`, "01234567".split(""), r.getValue());
             update_bus(`${r.name}-ctrl`, "-s -e -i".split(" "), r.controlBus.getValue());
             let textValue = document.getElementById(`${r.name}-value`);
-            textValue.textContent = r.getValue().toString(2).padStart(r.size, '0');
+            textValue.textContent = r.getDisplayValue();
             let register = document.getElementById(`svg-reg-${r.name}`);
             if (r.controlBus.getValue() & CTRL_SET) {
                 if (!register.classList.contains('write'))
@@ -167,13 +180,19 @@ class Simulation {
         else {
             aluSvg.classList.remove('read');
         }
+        let instructionDesc = document.getElementById("control-step");
+        instructionDesc.textContent = this.decoder.currentStepDescription();
     }
-    update() {
+    async update() {
         if (this._state == null) {
             this._state = "step";
         }
+        let clockLine = document.getElementById("clock-line");
+        clockLine.classList.add("high");
         this.update_state();
         this.update_display();
+        await sleep(this.clock_period / 2);
+        clockLine.classList.remove("high");
         if (this._state == "step") {
             this._state = null;
         }
@@ -183,11 +202,10 @@ class Simulation {
             this._state = "instruction";
             this._stop = false;
         }
-        this.update();
-        while (this.decoder.currentStep() != "fetch_step1" && !this._stop) {
-            await sleep(0);
-            this.update();
-        }
+        do {
+            await this.update();
+            await sleep(this.clock_period / 2);
+        } while (this.decoder.currentStep() != "fetch_step1" && !this._stop);
         if (this._state == "instruction") {
             this._state = null;
         }
@@ -262,4 +280,14 @@ save b a
 jmp i
 0x04`;
 sim.loadProgram(example_1);
+function openTab(target, tabName) {
+    let tabContent = document.getElementsByClassName("tabcontent");
+    Array.from(tabContent).forEach((t) => t.classList.remove("active"));
+    // Get all elements with class="tablinks" and remove the class "active"
+    let tablinks = document.getElementsByClassName("tablinks");
+    Array.from(tablinks).forEach((t) => t.classList.remove("active"));
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).classList.add("active");
+    target.classList.add("active");
+}
 //# sourceMappingURL=sim_ui.js.map
