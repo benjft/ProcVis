@@ -53,9 +53,12 @@ class Simulation {
 
         this.ctrlPC = new Bus(CTRL_SIZE_SET_ENB_INC)
         this.regPC = new Register(WORD_SIZE, "pc", this.dataBus, this.ctrlPC)
+        this.regPC.displayMode = 1
 
         this.ctrlAddress = new Bus(CTRL_SIZE_SET)
         this.regAddress = new Register(WORD_SIZE, "addr", this.dataBus, this.ctrlAddress)
+        this.regAddress.displayMode = 1
+
 
         this.ctrlRam = new Bus(CTRL_SIZE_SET_ENB)
         this.ram = new RAM(WORD_SIZE, this.ctrlRam, this.regAddress, this.dataBus)
@@ -63,15 +66,19 @@ class Simulation {
 
         this.ctrlA = new Bus(CTRL_SIZE_SET_ENB)
         this.regA = new Register(WORD_SIZE, "a", this.dataBus, this.ctrlA)
+        this.regA.displayMode = 0
 
         this.ctrlB = new Bus(CTRL_SIZE_SET_ENB)
         this.regB = new Register(WORD_SIZE, "b", this.dataBus, this.ctrlB)
+        this.regB.displayMode = 0
 
         this.ctrlT1 = new Bus(CTRL_SIZE_SET)
         this.regT1 = new Register(WORD_SIZE, "t1", this.dataBus, this.ctrlT1)
+        this.regT1.displayMode = 0
 
         this.ctrlT2 = new Bus(CTRL_SIZE_SET)
         this.regT2 = new Register(WORD_SIZE, "t2", this.dataBus, this.ctrlT2)
+        this.regT2.displayMode = 0
 
         this.ctrlALU = new Bus(ALU_CTRL_SIZE)
         this.alu = new ArithmeticLogicUnit(this.regT1, this.regT2, this.dataBus, this.ctrlALU)
