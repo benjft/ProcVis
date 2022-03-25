@@ -8,7 +8,7 @@
 <!--  <body>-->
     <link rel="stylesheet" href="proc_vis.css">
     <div class="box">
-      <svg id="cpu-svg" xmlns="http://www.w3.org/2000/svg" width="870px" height="695px">
+      <svg id="cpu-svg" xmlns="http://www.w3.org/2000/svg" width="900px" height="695px">
         <g transform="translate(10,10)">
 
           <g transform="translate(175,150)">
@@ -213,13 +213,13 @@
               <text class="label small" x="50" y="-40" text-anchor="middle" transform="rotate(90)">Address Register</text>
             </g>
             <!--          <rect id="svg-reg-adr" class="register" height="100px" width="50px" y="425px"/>-->
-            <rect id="svg-ram" class="ram" height="575px" width="200px" x="75px"/>
-            <line class="ram" x1="75px" x2="275px" y1="45px" y2="45px"/>
+            <rect id="svg-ram" class="ram" height="575px" width="230px" x="75px"/>
+            <line class="ram" x1="75px" x2="305px" y1="45px" y2="45px"/>
             <g transform="translate(77,544)">
               <text class="label small" y="0" rotate="90">S</text>
               <text class="label small" y="6" rotate="90">E</text>
             </g>
-            <text class="label large" x="175px" y="35px" text-anchor="middle">RAM</text>
+            <text class="label large" x="190px" y="35px" text-anchor="middle">RAM</text>
           </g>
           <g transform="translate(100,352)">
             <text class="label small" rotate="-90" text-anchor="middle" y="-12">0</text>
@@ -233,7 +233,7 @@
           </g>
           <g transform="translate(0,575)"> <!-- Clock -->
             <path id="clock-line" d="m 50 0 v 25" class="line data"/>
-            <rect y="25" height="75" width="350" class="decoder"/>
+            <rect y="25" height="75" width="500" class="decoder" />
             <text x="20" y="62.5" class="label large" alignment-baseline="central">Clock</text>
             <g id="clock-loop" class="button" onclick="onButtonPress('loop')" transform="translate(125,37.5)">
               <circle class="clock-button" r="25" cx="25" cy="25"/>
@@ -249,11 +249,22 @@
               <polygon class="register" points="30 25, 15 33.6602540378, 15 16.3397459622"/>
               <polygon class="register" points="30 16.3397459622, 35 16.3397459622, 35 33.6602540378, 30 33.6602540378"/>
             </g>
+            <g id="clock-delay" transform="translate(345,45)">
+              <text class="label" style="font-size: small">Clock Delay (ms)</text>
+            </g>
+          </g>
+
+          <g id="bttn-reset" class="button" onclick="sim.reset(); sim.update_display()" transform="translate(650,600)">
+            <rect height="75" width="230" class="register reset-button"/>
+            <text class="label large" text-anchor="middle" x="115" y="45">Reset</text>
           </g>
         </g>
       </svg>
       <div class="ram input">
         <table id="ram-table"></table>
+      </div>
+      <div class="clock-settings">
+        <input id="clock-time" type="number"  value="250"/>
       </div>
       <script src="./proc_sim.js"></script>
       <script src="./sim_ui.js"></script>
@@ -306,9 +317,9 @@
           memory at the specified address is set to the value on the data-bus, and with the 'Enable' control the value
           at the address is written to the data-bus.
         </p>
-        <br>
+        <hr/>
         <p>
-          The computer is initially with a program loaded performs the multiplication 3&times;5 and stores the result at
+          The computer is initially loaded with a program that performs the multiplication 3&times;5 and stores the result at
           address 0x03 before entering an infinite loop.
           To see how this works use the buttons on the Clock. Fast-forward through to run through the entire program
           without stopping, use play to run through to the next instruction, or use the step button to advance one clock
@@ -340,31 +351,43 @@
           <li>
             Maths:
             <ul>
-              <li>add $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> + $i<sub>2</sub></li>
-              <li>sub $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> - $i<sub>2</sub></li>
-              <li>and $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise and with $i<sub>2</sub></li>
-              <li>ior $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise inclusive or with $i<sub>2</sub></li>
-              <li>xor $i<sub>1</sub> $i<sub>2</sub> $r &rightarrow; set $r to $i<sub>1</sub> bitwise exclusive or with $i<sub>2</sub></li>
-              <li>not $i $r &rightarrow; set $r to the bitwise negation of $i</li>
+              <li><span class="mono">add $i<sub>1</sub> $i<sub>2</sub> $r</span> &rightarrow; set $r to $i<sub>1</sub> + $i<sub>2</sub></li>
+              <li><span class="mono">sub $i<sub>1</sub> $i<sub>2</sub> $r</span> &rightarrow; set $r to $i<sub>1</sub> - $i<sub>2</sub></li>
+              <li><span class="mono">and $i<sub>1</sub> $i<sub>2</sub> $r</span> &rightarrow; set $r to $i<sub>1</sub> bitwise and with $i<sub>2</sub></li>
+              <li><span class="mono">ior $i<sub>1</sub> $i<sub>2</sub> $r</span> &rightarrow; set $r to $i<sub>1</sub> bitwise inclusive or with $i<sub>2</sub></li>
+              <li><span class="mono">xor $i<sub>1</sub> $i<sub>2</sub> $r</span> &rightarrow; set $r to $i<sub>1</sub> bitwise exclusive or with $i<sub>2</sub></li>
+              <li><span class="mono">not $i $r</span> &rightarrow; set $r to the bitwise negation of $i</li>
             </ul>
           </li>
           <li>
             Memory:
             <ul>
-              <li>save $r<sub>1</sub> $r<sub>2</sub> &rightarrow; saves the value in $r<sub>1</sub> at $r<sub>2</sub></li>
-              <li>load $i $r &rightarrow; loads the value/value at $i into $r</li>
+              <li><span class="mono">save $r<sub>1</sub> $r<sub>2</sub></span> &rightarrow; saves the value in $r<sub>1</sub> at $r<sub>2</sub></li>
+              <li><span class="mono">load $i $r</span> &rightarrow; loads the value/value at $i into $r</li>
             </ul>
+            It should be noted that for load operations with an immediate value the value itself is loaded, not the
+            value at the following address. This is because the ram cannot write to the address register without
+            changing the address being read. Therefor to load an instruction from a different address two instructions
+            are needed 1) load the address you intend to read into a register 2) load the address indicated by that
+            register. The same is true for save operations, meaning that the address being saved to always needs to be
+            loaded into a register before save operations. In practice this looks like:
+            "<span class="mono">load i a; 0x$$; load a a</span>" to
+            load a value at an address into a and "<span class="mono">load i a; 0x$$; save b a</span>" to save b at an
+            address.
           </li>
           <li>
             Jumps:
             <ul>
-              <li>jmp $i &rightarrow; goto $i</li>
-              <li>jlz $i &rightarrow; goto $i if the last maths operation gave a signed value less than 0</li>
-              <li>jgz $i &rightarrow; goto $i if the last maths operation gave a signed value greater than 0</li>
-              <li>jez $i &rightarrow; goto $i is the last maths operation gave a value of zero</li>
+              <li><span class="mono">jmp $i</span> &rightarrow; goto $i</li>
+              <li><span class="mono">jlz $i</span> &rightarrow; goto $i if the last maths operation gave a signed value less than 0</li>
+              <li><span class="mono">jgz $i</span> &rightarrow; goto $i if the last maths operation gave a signed value greater than 0</li>
+              <li><span class="mono">jez $i</span> &rightarrow; goto $i is the last maths operation gave a value of zero</li>
             </ul>
           </li>
         </ul>
+        For convenience, when typing instructions immediate values can be given in-line
+        (e.g. <span class="mono">add a 1 a</span>) and will be converted to the actual instructions on assembly
+        (e.g. <span class="mono">add a i a; 1</span>).
       </div>
       <div id="feedback" class="tabcontent">
         <p>
