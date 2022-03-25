@@ -17,15 +17,9 @@ body
 svg
   overflow: visible
 
-.instructions
-  flex: 1
-  display: flex
-  flex-direction: column
-  //background-color: grey
-  min-width: 33%
-  max-height: 100vh
-
 .button
+  cursor: pointer
+
   &:hover>.clock-button
     fill-opacity: 75%
 
@@ -35,14 +29,16 @@ svg
   &.active>.clock-button
     fill: seagreen
 
+  //&:hover
 .clock-button
   fill: white
   fill-opacity: 50%
   stroke: darkred
   stroke-width: 3
 
-  //&:hover
-    fill-opacity: 75%
+
+//&:hover
+  fill-opacity: 75%
 
   //&:active
     fill-opacity: 100%
@@ -81,10 +77,22 @@ svg
     // positioning over same element in SVG
     top: 57px
     left: 670px
-    width: 188px
+    width: 218px
     //height: 513px
     max-height: 513px
     overflow-y: auto
+
+.clock-settings
+  position: absolute
+  top: 635px
+  left: 360px
+  width: 100px
+
+#clock-time
+  width: 100px
+  font-size: x-large
+  font-family: monospace
+  text-align: right
 
 .ram, .register, .alu
   &.read
@@ -152,8 +160,18 @@ td
 
 .g-reg
   cursor: pointer
+
+
+.instructions
+  flex: 1
+  display: flex
+  flex-direction: column
+  //background-color: grey
+  min-width: 33%
+  max-height: 100vh
+
 .tab
-  overflow: hidden
+  //overflow: hidden
   border: 1px solid #ccc
   background-color: #f1f1f1
 
@@ -176,6 +194,7 @@ td
   background-color: #ccc
 
 .tabcontent
+  flex: 1
   display: none
   padding: 6px 12px
   border: 1px solid #ccc
@@ -185,3 +204,20 @@ td
 
   &.active
     display: block
+
+.reset-button
+  fill: seagreen
+  stroke: darkgreen
+
+
+.button
+  &:hover>.reset-button
+    fill: mediumseagreen
+
+
+span.mono
+  font-family: monospace
+
+@media screen and (max-width: 1350px)
+  .instructions
+    max-height: none
