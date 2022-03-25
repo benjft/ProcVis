@@ -63,7 +63,7 @@ class Simulation {
         let ramHTML = (i, v) => `
 <tr class="ram-word">
   <td class="inputLabel" onclick="sim.cycleDisplay(${i})">${i.toString(16).padStart(2, '0')}</td>
-  <td><input id="ram-input${i}" class="inputArea" size="8" pattern="[01]{${WORD_SIZE}}" inputmode="numeric" value="${v}"></td>
+  <td><input id="ram-input${i}" class="inputArea" size="10" pattern="[01]{${WORD_SIZE}}" inputmode="numeric" value="${v}"></td>
 </tr>`;
         let innerHTML = '';
         this.ram.data.forEach((value, index) => {
@@ -103,14 +103,18 @@ class Simulation {
         this.ram.update();
         this.registers.forEach(r => r.update_set());
     }
-    setRamScroll() {
+    // private scrollRam() {
+    //
+    // }
+    setRamScroll(doScroll = false) {
         let ramContainer = document.getElementById("ram-table").parentElement;
         let ramIndex = this.regAddress.getValue();
         let ramRow = document.getElementById(`ram-input${ramIndex}`).parentElement.parentElement;
         ramRow.classList.add("active");
-        ramContainer.scrollTo(0, ramRow.offsetTop - ramRow.offsetHeight / 2 - ramContainer.offsetHeight / 2);
+        if (doScroll)
+            ramContainer.scrollTo(0, ramRow.offsetTop - ramRow.offsetHeight / 2 - ramContainer.offsetHeight / 2);
     }
-    update_display() {
+    update_display(doRamScroll = false) {
         function update_bus(name, suffixes, value) {
             for (let i = 0; i <= suffixes.length; i++) {
                 let line = document.getElementById(`${name}${suffixes[i]}`);
@@ -171,7 +175,7 @@ class Simulation {
                 inputBox.value = value.getDisplayValue();
             }
         });
-        this.setRamScroll();
+        this.setRamScroll(doRamScroll);
         let aluSvg = document.getElementById('svg-alu');
         if (this.ctrlALU.getValue() != 0) {
             if (!aluSvg.classList.contains('read'))
@@ -190,7 +194,8 @@ class Simulation {
         let clockLine = document.getElementById("clock-line");
         clockLine.classList.add("high");
         this.update_state();
-        this.update_display();
+        this.update_display(true);
+        // this.setRamScroll()
         await sleep(this.clock_period / 2);
         clockLine.classList.remove("high");
         if (this._state == "step") {
@@ -254,6 +259,16 @@ async function onButtonPress(button) {
     }
     buttonGroup.classList.remove("active");
 }
+function setClockPeriod(value) {
+    let isNumber = value.match(/^\d+$/);
+    if (!isNumber || parseInt(value) < 0) {
+        clockTimeInput.value = sim.clock_period.toString(10);
+        return;
+    }
+    sim.clock_period = parseInt(value);
+}
+let clockTimeInput = document.getElementById("clock-time");
+clockTimeInput.onchange = () => setClockPeriod(clockTimeInput.value);
 const example_1 = `jmp i
 0x04
 3
