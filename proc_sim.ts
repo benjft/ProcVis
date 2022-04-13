@@ -12,7 +12,7 @@ class RamWord {
         }
     }
 
-    public readonly getValue = () => this.numValue
+    public readonly getValue = () => this.numValue & ((1<<WORD_SIZE) - 1)
 
     public getTextValue() {
         if (this.textValue != null) {
@@ -59,7 +59,7 @@ class RamWord {
 
     public setValue(numValue: number, textValue: string|null = null) {
         this.textValue = textValue
-        this.numValue = numValue
+        this.numValue = numValue & ((1<<WORD_SIZE) - 1)
     }
 }
 
@@ -79,7 +79,7 @@ abstract class ReadOnlyBus extends RamWord{
         }
         this.size = size
 
-        this.maxValue = 2**size - 1
+        this.maxValue = (1<<size) - 1
     }
 
     public isDirty(): boolean {
@@ -159,7 +159,7 @@ class Register extends ReadOnlyBus {
             this.numValue = this.dataBus.getValue()
             this.dirty = true
         } else if (ctrl & CTRL_INC && !this.isDirty()) {
-            this.numValue = (this.numValue + 1) % (1 << this.size)
+            this.numValue = (this.numValue + 1) & this.maxValue
             this.dirty = true
         }
     }
@@ -180,10 +180,8 @@ const ALU_INSTRUCTIONS = {
     "not": ALU_NOT
 }
 
-const FLGS_Z = 0b1000
-const FLGS_S = 0b0100
-const FLGS_O = 0b0010
-const FLGS_C = 0b0001
+const FLGS_Z = 0b10
+const FLGS_S = 0b01
 class ArithmeticLogicUnit extends ReadOnlyBus {
     private readonly inputT1: ReadOnlyBus
     private readonly inputT2: ReadOnlyBus
@@ -198,8 +196,6 @@ class ArithmeticLogicUnit extends ReadOnlyBus {
         this.dataBus = dataBus
 
         this.controlBus = controlBus
-
-        // this.value = flags
     }
 
 
@@ -209,14 +205,14 @@ class ArithmeticLogicUnit extends ReadOnlyBus {
             return
         }
 
-        let a = this.inputT1.getValue()
-        let signA: number = +((a & (1<<(this.inputT1.size-1))) != 0)
+        let a = this.inputT1.getValue() & ((1<<WORD_SIZE) - 1)
+        let signA: number = a >> (WORD_SIZE - 1)
 
-        let b = this.inputT2.getValue()
-        let signB: number = +((b & (1<<(this.inputT2.size-1))) != 0)
+        let b = this.inputT2.getValue() & ((1<<WORD_SIZE) - 1)
+        let signB: number = b >> (WORD_SIZE - 1)
 
         let res: number = 0
-        let flgs = 0b0000
+        let flgs = 0b00
 
         switch (op & 0b111) {
             case ALU_ADD:
@@ -239,17 +235,10 @@ class ArithmeticLogicUnit extends ReadOnlyBus {
                 break
 
         }
+        res &= ((1<<WORD_SIZE) - 1)
 
-        if (res > this.dataBus.maxValue) {
-            res -= this.dataBus.maxValue
-            flgs |= FLGS_C // 1 << 0 // set carry flag
-        }
-        let signRes = (res & (1 << (this.dataBus.size - 1))) > 0 ? 1 : 0
+        let signRes = res >> (WORD_SIZE - 1)
         flgs |= signRes ? FLGS_S : 0 // set sign flag
-
-        if (signA === signB) {
-            flgs |= (signA ^ signRes) ? FLGS_O : 0 // (signRes ^ signA) << 1 // set overflow flag
-        }
 
         if (res === 0) {
             flgs |= FLGS_Z // 1 << 3 // set zero flag
@@ -283,15 +272,15 @@ class RAM {
     }
 
     public update() {
-        let address = this.addressBus.getValue()
+        let address = this.addressBus.getValue() & ((1<<WORD_SIZE) - 1)
         let value: number
         switch (this.controlBus.getValue()) {
             case CTRL_ENB:
-                value = this.data[address].getValue()
+                value = this.data[address].getValue() & ((1<<WORD_SIZE) - 1)
                 this.dataBus.setValue(value)
                 break
             case CTRL_SET:
-                value = this.dataBus.getValue()
+                value = this.dataBus.getValue() & ((1<<WORD_SIZE) - 1)
                 this.data[address].setValue(value)
                 break
             default: // No control or invalid control state
@@ -925,7 +914,7 @@ function assembleRamInstruction(instruction: string): RamWord | null {
 const patternDecNumber = `-?\\d{1,3}`
 const patternHexNumber = `0x[\\da-f]{1,2}`
 const patternBinNumber = `0b[01]{1,8}`
-const patternNumber = `\\b(${patternDecNumber}|${patternHexNumber}|${patternBinNumber})\\b`
+const patternNumber = `(?:^|\\s)(${patternHexNumber}|${patternBinNumber}|${patternDecNumber})(?:\\s|$)`
 function assembleInstruction(instruction: string): RamWord[] {
     instruction = instruction.toLowerCase()
     let regExpNumber = new RegExp(patternNumber)
