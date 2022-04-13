@@ -151,7 +151,7 @@ class Simulation {
             }
         });
         update_bus("alu-ctrl", "-0 -1 -2".split(" "), this.ctrlALU.getValue());
-        update_bus("flgs", "-0 -1 -2 -3".split(" "), this.alu.getValue());
+        update_bus("flgs", "-0 -1".split(" "), this.alu.getValue());
         update_bus("ram-ctrl", "-s -e".split(" "), this.ctrlRam.getValue());
         let ramSvg = document.getElementById('svg-ram');
         if (this.ctrlRam.getValue() & CTRL_SET) {
