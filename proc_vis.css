@@ -1,9 +1,10 @@
 body {
   padding: 0;
-  margin: 0;
+  margin: auto;
   display: flex;
   justify-content: space-around;
-  max-width: 100vw;
+  align-self: center;
+  max-width: 1800px;
   flex-wrap: wrap;
 }
 
@@ -156,7 +157,8 @@ td {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 33%;
+  min-width: 450px;
+  max-width: 900px;
   max-height: 100vh;
 }
 
@@ -212,6 +214,8 @@ span.mono {
 @media screen and (max-width: 1350px) {
   .instructions {
     max-height: none;
+    min-width: min(100%, 900px);
+    max-width: 900px;
   }
 }
 
