@@ -1,10 +1,19 @@
+@use "sass:math"
+
+$DIAGRAM_WIDTH : 900px
+
+$MIN_WIDTH : $DIAGRAM_WIDTH + math.div($DIAGRAM_WIDTH, 2)
+$MAX_WIDTH : 2*$DIAGRAM_WIDTH
+
+$ONE_THIRD_VW : math.div(100vw, 3)
+
 body
   padding: 0
-  margin: 0
+  margin: auto
   display: flex
   justify-content: space-around
-  max-width: 100vw
-  //max-height: 100vh
+  align-self: center
+  max-width: $MAX_WIDTH
   flex-wrap: wrap
 
 .box
@@ -167,7 +176,8 @@ td
   display: flex
   flex-direction: column
   //background-color: grey
-  min-width: 33%
+  min-width: math.div($DIAGRAM_WIDTH, 2)
+  max-width: $DIAGRAM_WIDTH
   max-height: 100vh
 
 .tab
@@ -218,6 +228,8 @@ td
 span.mono
   font-family: monospace
 
-@media screen and (max-width: 1350px)
+@media screen and (max-width: $MIN_WIDTH)
   .instructions
     max-height: none
+    min-width: min(100%, $DIAGRAM_WIDTH)
+    max-width: $DIAGRAM_WIDTH
