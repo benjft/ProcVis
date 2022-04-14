@@ -954,6 +954,7 @@ function assembleInstruction(instruction: string): RamWord[] {
             return [immediateNumber]
         }
         console.warn("Unable to compile instruction. Check syntax.")
+        return null
     }
     if (immediateNumber != null) {
         return [instructionWord, immediateNumber]

@@ -115,7 +115,7 @@ class Simulation {
         let ramHTML = (i: number, v: string) => `
 <tr class="ram-word">
   <td class="inputLabel" onclick="sim.cycleDisplay(${i})">${i.toString(16).padStart(2, '0')}</td>
-  <td><input id="ram-input${i}" class="inputArea" size="10" pattern="[01]{${WORD_SIZE}}" inputmode="numeric" value="${v}"></td>
+  <td><input id="ram-input${i}" class="inputArea" size="10" value="${v}"></td>
 </tr>`
         let innerHTML = ''
         this.ram.data.forEach((value, index) => {
@@ -130,7 +130,12 @@ class Simulation {
                 let target = e.target as HTMLInputElement
                 let idx = parseInt(target.id.replace("ram-input", ""))
                 let ins = assembleInstruction(target.value)
-                if (typeof ins == "string" || (ins.length > 1 && idx > (1 << WORD_SIZE)-1-ins.length)) {
+                if (ins == null || (ins.length > 1 && idx > (1 << WORD_SIZE)-ins.length)) {
+                    if (ins == null) {
+                        alert(`Failed to compile instruction "${target.value}"`)
+                    } else {
+                        alert(`Instruction would run past end of memory. Requires ${ins.length} of ${(1 << WORD_SIZE)-idx} available words`)
+                    }
                     target.value = this.ram.data[idx].getDisplayValue()
                 } else {
                     while (ins.length > 0) {

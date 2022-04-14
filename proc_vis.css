@@ -157,8 +157,6 @@ td {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 450px;
-  max-width: 900px;
   max-height: 100vh;
 }
 
@@ -211,7 +209,7 @@ span.mono {
   font-family: monospace;
 }
 
-@media screen and (max-width: 1350px) {
+@media screen and (max-width: 1500px) {
   .instructions {
     max-height: none;
     min-width: min(100%, 900px);

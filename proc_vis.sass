@@ -2,7 +2,7 @@
 
 $DIAGRAM_WIDTH : 900px
 
-$MIN_WIDTH : $DIAGRAM_WIDTH + math.div($DIAGRAM_WIDTH, 2)
+$MIN_WIDTH : $DIAGRAM_WIDTH + 2*math.div($DIAGRAM_WIDTH, 3)
 $MAX_WIDTH : 2*$DIAGRAM_WIDTH
 
 $ONE_THIRD_VW : math.div(100vw, 3)
@@ -175,9 +175,6 @@ td
   flex: 1
   display: flex
   flex-direction: column
-  //background-color: grey
-  min-width: math.div($DIAGRAM_WIDTH, 2)
-  max-width: $DIAGRAM_WIDTH
   max-height: 100vh
 
 .tab

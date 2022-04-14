@@ -8,7 +8,7 @@
 <!--  <body>-->
     <link rel="stylesheet" href="proc_vis.css">
     <div class="box">
-      <svg id="cpu-svg" xmlns="http://www.w3.org/2000/svg" width="900px" height="695px">
+      <svg id="cpu-svg" xmlns="http://www.w3.org/2000/svg" width="900px" height="720px">
         <g transform="translate(10,10)">
 
           <g transform="translate(175,150)">
@@ -228,21 +228,34 @@
           </g>
           <g transform="translate(0,575)"> <!-- Clock -->
             <path id="clock-line" d="m 50 0 v 25" class="line data"/>
-            <rect y="25" height="75" width="500" class="decoder" />
-            <text x="20" y="62.5" class="label large" alignment-baseline="central">Clock</text>
+            <rect y="25" height="100" width="500" class="decoder" />
+            <text x="20" y="75" class="label large" alignment-baseline="central">Clock</text>
             <g id="clock-loop" class="button" onclick="onButtonPress('loop')" transform="translate(125,37.5)">
               <circle class="clock-button" r="25" cx="25" cy="25"/>
               <polygon class="register" points="30 25, 15 33.6602540378, 15 16.3397459622"/>
               <polygon class="register" points="40 25, 25 33.6602540378, 25 16.3397459622"/>
+              <g transform="translate(25, 65)">
+                <text class="label" style="font-size: small" text-anchor="middle">
+                  <tspan x="0">Run</tspan>
+                  <tspan x="0" dy="1.2em">Program</tspan>
+                </text>
+              </g>
             </g>
             <g id="clock-instruction" class="button" onclick="onButtonPress('instruction')" transform="translate(200,37.5)">
               <circle class="clock-button" r="25" cx="25" cy="25"/>
               <polygon class="register" points="35 25, 20 33.6602540378, 20 16.3397459622"/>
+              <g transform="translate(25, 65)">
+                <text class="label" style="font-size: small" text-anchor="middle">
+                  <tspan x="0">Run</tspan>
+                  <tspan x="0" dy="1.2em">Instruction</tspan>
+                </text>
+              </g>
             </g>
             <g id="clock-step" class="button" onclick="onButtonPress('step')" transform="translate(275,37.5) ">
               <circle class="clock-button" r="25" cx="25" cy="25"/>
               <polygon class="register" points="30 25, 15 33.6602540378, 15 16.3397459622"/>
               <polygon class="register" points="30 16.3397459622, 35 16.3397459622, 35 33.6602540378, 30 33.6602540378"/>
+              <text class="label" style="font-size: small" text-anchor="middle" x="25" y="65">Step</text>
             </g>
             <g id="clock-delay" transform="translate(345,45)">
               <text class="label" style="font-size: small">Clock Delay (ms)</text>
@@ -276,6 +289,7 @@
         Hello!<br>
         <p>Welcome to ProcVis, a program to help visualise how processors work</p>
         <p>The interactive diagram above shows a very simple computer architecture.</p>
+        <h2>Registers</h2>
         <p>
           The small rectangles are registers, these all store an eight digit (eight bit) binary number.
           The value they are storing at any time is written on them.
@@ -287,10 +301,15 @@
           its stored value.
         </p>
         <p>
+          <b>Tip: </b>Click on the registers to cycle between decimal, hex, and binary representations
+        </p>
+        <h2>Control Unit</h2>
+        <p>
           The large rectangle on the left, labeled Control Unit (CU), is responsible for decoding the instructions and
           sending signals to the other components telling them what to do each clock cycle. This includes sending the
           Set/Enable signals for the registers and ram, and the op-codes for the ALU.
         </p>
+        <h2>ALU</h2>
         <p>
           The odd shaped block in the middle labeled ALU is the "Arithmetic and Logic Unit". This is responsible for
           performing any calculations wanted by the program. When given an op-code on its three control lines from the
@@ -304,6 +323,7 @@
           <span style="text-decoration: underline">C</span>arry of the output was high (e.g. addition of unsigned
           numbers was greater than eight bits).
         </p>
+        <h2>RAM</h2>
         <p>
           The large block on the right is computer's memory, called Random Access Memory or RAM as we are able to access
           any part of it at all times. This memory can be read or written to using the data-bus and Set/Enable control
@@ -312,7 +332,11 @@
           memory at the specified address is set to the value on the data-bus, and with the 'Enable' control the value
           at the address is written to the data-bus.
         </p>
+        <p>
+          <b>Tip: </b>Click on the address numbers next to each input to cycle between decimal, hex, binary, and text representations
+        </p>
         <hr/>
+        <h2>Programming</h2>
         <p>
           The computer is initially loaded with a program that performs the multiplication 3&times;5 and stores the result at
           address 0x03 before entering an infinite loop.
@@ -353,6 +377,12 @@
               <li><span class="mono">xor $i<sub>1</sub> $i<sub>2</sub> $r</span> &rightarrow; set $r to $i<sub>1</sub> bitwise exclusive or with $i<sub>2</sub></li>
               <li><span class="mono">not $i $r</span> &rightarrow; set $r to the bitwise negation of $i</li>
             </ul>
+            <b>Example 1: </b>"<span class="mono">add a a b</span>" will add the value in register 'a' to itself, and put the result in register 'b'.<br/>
+            <b>Example 2: </b>"<span class="mono">sub a 10 b</span>" will subtract  10 from the value in register 'a' and put the result in register 'b'.
+            <p>
+              <b>Note:</b> Instructions with an immediate operand (e.g. the 10 in <span class="mono">sub a 10 b</span>) take two bytes of memory!<br/>
+              They are compiled to instructions in the form "<span class="mono">sub a i b; 10;</span>" with i showing the use of an immediate operand.
+            </p>
           </li>
           <li>
             Memory:
@@ -360,15 +390,12 @@
               <li><span class="mono">save $r<sub>1</sub> $r<sub>2</sub></span> &rightarrow; saves the value in $r<sub>1</sub> at $r<sub>2</sub></li>
               <li><span class="mono">load $i $r</span> &rightarrow; loads the value/value at $i into $r</li>
             </ul>
-            It should be noted that for load operations with an immediate value the value itself is loaded, not the
-            value at the following address. This is because the ram cannot write to the address register without
-            changing the address being read. Therefor to load an instruction from a different address two instructions
-            are needed 1) load the address you intend to read into a register 2) load the address indicated by that
-            register. The same is true for save operations, meaning that the address being saved to always needs to be
-            loaded into a register before save operations. In practice this looks like:
-            "<span class="mono">load i a; 0x$$; load a a</span>" to
-            load a value at an address into a and "<span class="mono">load i a; 0x$$; save b a</span>" to save b at an
-            address.
+            <b>Example 1: </b>"<span class="mono">load 0xfa a</span>" will load the value "<span class="mono">0xfa</span>" into register 'a'.<br/>
+            <b>Example 2: </b>"<span class="mono">load a a</span>" will load the value at the address in register 'a' into register 'a'.
+            <p>
+              <b>Note:</b> To load a value from a specified address requires two instructions: first load the address into the target register, then load from the register address.
+              e.g. "<span class="mono">load 0x0f a; load a a</span>" would be used to load the value at address "<span class="mono">0x0f</span>" into register 'a'.
+            </p>
           </li>
           <li>
             Jumps:
